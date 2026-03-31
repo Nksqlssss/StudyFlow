@@ -1,0 +1,36 @@
+:root {
+  --bg-primary: #0B1326;
+  --bg-secondary: #020617;
+  --bg-tertiary: #222232;
+
+  --text-primary: #ffffff;
+  --text-secondary: #94A3B8;
+  --text-muted: #C7C4D7;
+
+  --accent-purple: #7c6ff7;
+  --accent-orange: #f5a623;
+  --accent-red: #e05252;
+  --accent-green: #4caf82;
+
+  --progress-bg: #2a2a3a;
+  --font-main: 'Inter', sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+h1 {
+  color: var(--text-primary);
+  font-size: var(--text-xl);
+}
