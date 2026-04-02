@@ -1,5 +1,6 @@
-<script>
-
+<script lang="ts">
+	import SubjectCard from '$lib/components/ui/SubjectCard.svelte';
+	import { subjects } from '$lib/stores/subjects';
 </script>
 
 <header class="header">
@@ -25,6 +26,16 @@
 			Ваш текущий прогресс обучения
 		</p>
 	</section>
+
+	{#each $subjects as subject (subject.id)}
+		<SubjectCard {subject} />
+	{:else}
+		<p>Предметы не добавлены</p>
+	{/each}
+
+	<a href="/subject/new" class="add-subject-button">
+		<img src="/icons/pluseIcon.svg" alt="">
+	</a>
 </main>
 
 <footer class="footer">
@@ -62,6 +73,7 @@
 		justify-content: space-between;
 		align-items: center;
 		position: fixed;
+		opacity: 100;
 		left: 0;
 		right: 0;
 		bottom: 0;
@@ -148,5 +160,24 @@
 		justify-content: center;
 		background-color: var(--bg-primary);
 		border-radius: 50%;
+	}
+
+	.add-subject-button {
+		position: absolute;
+		right: 23px;
+		bottom: 108px;
+		width: 56px;
+		height: 56px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		border-radius: 20px;
+		border: none;
+		outline: none;
+		font-size: 30px;
+		color: #1000A9;
+		background: linear-gradient(135deg, #C0C1FF, #8083FF);
+		box-shadow: 0 10px 30px 0 #6366F12A;
+		text-decoration: none;
 	}
 </style>

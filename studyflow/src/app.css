@@ -34,3 +34,11 @@ h1 {
   color: var(--text-primary);
   font-size: var(--text-xl);
 }
+
+.main-title {
+		font-size: 22px;
+		font-weight: 700;
+		line-height: 33px;
+		letter-spacing: -0.55px;
+    color: var(--text-primary);
+	}

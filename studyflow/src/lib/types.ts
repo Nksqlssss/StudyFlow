@@ -2,6 +2,8 @@ export type TaskStatus = 'todo' | 'in_progress' | 'done';
 
 export type TaskPriority = 'low' | 'medium' | 'high';
 
+export type SubjectIcon = 'math' | 'code' | 'language' | 'paint';
+
 export interface Task {
   id: string;
   subjectId: string;       
@@ -17,6 +19,7 @@ export interface Task {
 export interface Subject {
   id: string;
   title: string;
-  icon: string;    
+  description?: string;
+  icon: SubjectIcon;    
   createdAt: Date;
 }
