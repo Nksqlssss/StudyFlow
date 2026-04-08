@@ -3,20 +3,11 @@
 	import { subjects } from '$lib/stores/subjects';
 	import type { SubjectIcon } from '$lib/types';
 
-	let dateInput: HTMLInputElement
 	let title = $state('');
 	let description = $state('');
 	let selectedIcon = $state<SubjectIcon>('code');
 
 	const ICONS: SubjectIcon[] = ['code', 'math', 'language', 'paint'];
-
-	function openCalendar() {
-		if (dateInput.showPicker) {
-			dateInput.showPicker()
-		} else {
-			dateInput.focus()
-		}
-	}
 
 	function handleSubmit(e: Event) {
 		e.preventDefault()
@@ -46,16 +37,13 @@
 			<span class="label-text">Описание</span>
 			<textarea id='subjectDescription' class="subject-description-input" placeholder="Описание (необязательно)" bind:value={description}></textarea>
 		</label>
-		<label for="subjectCreatedas">
-			<span class="label-text">Дата</span>
-			<input type="date" class="subject-date-input" id="subjectCreatedas" bind:this={dateInput} onclick={openCalendar}>
-		</label>
 		<p class="select-icon">
 			Иконка
 		</p>
 		<div class="icons">
 		{#each ICONS as icon}
 			<button
+				type="button"
 				class="icon-wrapper"
 				class:is-current={selectedIcon === icon}
 				onclick={() => selectedIcon = icon}
@@ -164,7 +152,7 @@
 		margin-bottom: 16px;
 	}
 
-	.subject-name-input, .subject-description-input, .subject-date-input {
+	.subject-name-input, .subject-description-input {
 		padding: 18px 20px;
 		background-color: #131B2E;
 		border: none;
@@ -184,13 +172,8 @@
 		resize: none;
 	}
 
-	.subject-name-input::placeholder, .subject-description-input::placeholder,
-	.subject-date-input::placeholder {
+	.subject-name-input::placeholder, .subject-description-input::placeholder {
 		color: var(--text-secondary);
-	}
-
-	.subject-date-input::-webkit-calendar-picker-indicator {
-		display: none;
 	}
 
 	.icons {
@@ -213,7 +196,7 @@
 
 	.is-current {
 		border: 2px #C6C0FF solid;
-		background-color: #292a4fa1;
+		background-color: var(--bg-icon);
 	}
 
 	.header {

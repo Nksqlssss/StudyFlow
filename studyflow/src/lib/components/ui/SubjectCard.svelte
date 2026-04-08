@@ -9,33 +9,47 @@
   );
 </script>
 
-<section class="subject">
+<a href="/subject/{subject.id}" class="subject">
 	<div class="card-name-wrapper">
 		<div class="card-info-wrapper">
 			<h3 class="subject-title">
 				{subject.title}
 			</h3>
 			<span class="card-description">
-				{stats.active} активных заданий
+				Активных заданий: {stats.active}
 			</span>
 		</div>
-		<img src="/icons/{subject.icon}.svg" alt={subject.title} />
+		<div class="icon-wrapper">
+			<img src="/icons/{subject.icon}.svg" alt={subject.title} />
+		</div>
 	</div>
 	<div class="progress-bar-info">
 		<span>Выполнено:</span>
-		<p>{stats.progress}</p>
+		<p>{stats.progress}%</p>
 	</div>
 	<div class="progress-bar">
 		<div class="progress-bar-inner" style="width: {stats.progress}%"></div>
 	</div>
-</section>
+</a>
 
 <style>
+	.icon-wrapper {
+		width: 36px;
+		height: 38px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		background-color: var(--bg-icon);
+		border-radius: 8px;
+	}
+
 	.subject {
+		display: block;
 		background-color: #131B2E;
 		padding: 20px;
 		border-radius: 20px;
 		margin-top: 16px;
+		text-decoration: none;
 	}
 
 	.card-name-wrapper {
@@ -82,6 +96,7 @@
 	}
 
 	.progress-bar-info p {
+		font-size: 16px;
 		color: #8083FF;
 	}
 

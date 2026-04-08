@@ -2,6 +2,7 @@
   --bg-primary: #0B1326;
   --bg-secondary: #020617;
   --bg-tertiary: #222232;
+  --bg-icon: #292a4fa1;
 
   --text-primary: #ffffff;
   --text-secondary: #94A3B8;
@@ -35,10 +36,52 @@ h1 {
   font-size: var(--text-xl);
 }
 
+a {
+  text-decoration: none;
+  color: #fff;
+}
+
 .main-title {
-		font-size: 22px;
-		font-weight: 700;
-		line-height: 33px;
-		letter-spacing: -0.55px;
-    color: var(--text-primary);
-	}
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 33px;
+  letter-spacing: -0.55px;
+  color: var(--text-primary);
+}
+
+.high {
+  background-color: #93000A2A;
+  border: 1px solid #FFB4AB1A;
+  color: #FFB4AB;
+}
+
+.medium {
+  background-color: #FF9D002A;
+  border: 1px solid #FF9D001A;
+  color: #FF9D00;
+}
+
+.low {
+  background-color: #3333B03A;
+  border: 1px solid #C1C1FF1A;
+  color: #C1C1FF;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  background-color: transparent;
+  border: 2px solid #2D3449;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  padding: 0;
+  color: #fff;
+}
+
+.checkbox.is-checked {
+  background-color: #53c08f;
+  border-color: #53c08f;
+}

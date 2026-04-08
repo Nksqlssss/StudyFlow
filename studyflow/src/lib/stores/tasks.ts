@@ -2,7 +2,18 @@ import type { Task, TaskStatus } from '$lib/types'
 import { derived, writable } from 'svelte/store'
 
 function createTaskStore() {
-	const { subscribe, update: updateStore } = writable<Task[]>([]);
+	const { subscribe, update: updateStore } = writable<Task[]>([
+    {
+    id: '1',
+    subjectId: '1',
+    title: 'Сдать домашку',
+    priority: 'high',
+    status: 'todo',
+    deadline: new Date('2026-04-10'),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+  ]);
 
 	return {
 		subscribe,
@@ -58,6 +69,19 @@ export const taskStatsBySubject = derived(tasks, $tasks => {
     stats.progress = stats.total > 0
       ? Math.round((stats.done / stats.total) * 100)
       : 0;
+  }
+
+  return map;
+});
+
+export const tasksBySubject = derived(tasks, $tasks => {
+  const map = new Map<string, Task[]>();
+
+  for (const t of $tasks) {
+    if (!map.has(t.subjectId)) {
+      map.set(t.subjectId, []);
+    }
+    map.get(t.subjectId)!.push(t);
   }
 
   return map;
