@@ -5,8 +5,8 @@
   const { subject } = $props<{ subject: Subject }>();
 
   const stats = $derived(
-    $taskStatsBySubject.get(subject.id) ?? { active: 0, done: 0, total: 0, progress: 0 }
-  );
+		$taskStatsBySubject.get(subject.id) ?? { active: 0, done: 0, 		total: 0, progress: 0, hasUrgent: false }
+	);
 </script>
 
 <a href="/subject/{subject.id}" class="subject">
@@ -30,9 +30,45 @@
 	<div class="progress-bar">
 		<div class="progress-bar-inner" style="width: {stats.progress}%"></div>
 	</div>
+	{#if stats.hasUrgent}
+		<p class="urgent-warning">Сроки поджимают!</p>
+	{/if}
 </a>
 
 <style>
+	.subject::after {
+		content: '';
+		position: absolute;
+		bottom: 0px;
+		right: -20px;
+		background-color: #8B80FF;
+		height: 60px;
+		width: 120px;
+		border-radius: 50%;
+		filter: blur(60px);
+		opacity: 0.6;
+	}
+
+	.subject::before {
+		content: '';
+		position: absolute;
+		top: -20px;
+		left: -20px;
+		background-color: #8B80FF;
+		height: 60px;
+		width: 120px;
+		border-radius: 50%;
+		filter: blur(60px);
+		opacity: 0.6;
+	}
+
+	.urgent-warning {
+		font-size: 12px;
+		font-weight: 800;
+		color: var(--accent-red);
+		margin-top: 12px;
+	}
+
 	.icon-wrapper {
 		width: 36px;
 		height: 38px;
@@ -44,6 +80,8 @@
 	}
 
 	.subject {
+		position: relative;
+		overflow: hidden;
 		display: block;
 		background-color: #131B2E;
 		padding: 20px;

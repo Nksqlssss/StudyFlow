@@ -52,11 +52,12 @@ export const taskStatsBySubject = derived(tasks, $tasks => {
     done: number;
     total: number;
     progress: number;
+    hasUrgent: boolean;
   }>();
 
   for (const t of $tasks) {
     if (!map.has(t.subjectId)) {
-      map.set(t.subjectId, { active: 0, done: 0, total: 0, progress: 0 });
+      map.set(t.subjectId, { active: 0, done: 0, total: 0, progress: 0, hasUrgent: false });
     }
 
     const stats = map.get(t.subjectId)!;
@@ -65,6 +66,9 @@ export const taskStatsBySubject = derived(tasks, $tasks => {
       stats.done++;
     } else {
       stats.active++;
+      if (isUrgent(t.deadline)) {
+        stats.hasUrgent = true;
+      }
     }
     stats.progress = stats.total > 0
       ? Math.round((stats.done / stats.total) * 100)
@@ -86,3 +90,9 @@ export const tasksBySubject = derived(tasks, $tasks => {
 
   return map;
 });
+
+export function isUrgent(deadline?: Date): boolean {
+  if (!deadline) return false;
+  const hoursLeft = (deadline.getTime() - Date.now()) / 36e5;
+  return hoursLeft > 0 && hoursLeft <= 24;
+}

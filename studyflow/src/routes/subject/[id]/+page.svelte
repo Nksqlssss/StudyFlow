@@ -1,10 +1,28 @@
 <script lang="ts">
   const { data } = $props();
 	import BottomTabbar from '$lib/components/ui/bottomTabbar.svelte';
-	import { tasks, tasksBySubject, taskStatsBySubject } from '$lib/stores/tasks';
-	import type { TaskPriority } from '$lib/types.js';
+	import { isUrgent, tasks, tasksBySubject, taskStatsBySubject } from '$lib/stores/tasks';
+	import type { Task, TaskPriority } from '$lib/types.js';
 
 	const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high']
+
+	const PRIORITY_WEIGHT: Record<TaskPriority, number> = {
+		high: 3,
+		medium: 2,
+		low: 1,
+	};
+
+	function sortTasks(taskList: Task[]) {
+		return [...taskList].sort((a, b) => {
+			const aUrgent = isUrgent(a.deadline) ? 10 : 0;
+			const bUrgent = isUrgent(b.deadline) ? 10 : 0;
+
+			const aScore = PRIORITY_WEIGHT[a.priority] + aUrgent;
+			const bScore = PRIORITY_WEIGHT[b.priority] + bUrgent;
+
+			return bScore - aScore;
+		});
+	}
 
 	const stats = $derived(
     $taskStatsBySubject.get(data.subject.id) ?? { active: 0, done: 0, total: 0, progress: 0 }
@@ -42,13 +60,17 @@
 
 	const filteredTasks = $derived(() => {
 		const now = new Date();
+		let result: Task[];
+
 		if (activeTab === 'done') {
-			return subjectTasks.filter(t => t.status === 'done');
+			result = subjectTasks.filter(t => t.status === 'done');
+		} else if (activeTab === 'overdue') {
+			result = subjectTasks.filter(t => t.deadline && t.deadline < now && t.status !== 'done');
+		} else {
+			result = subjectTasks.filter(t => t.status !== 'done');
 		}
-		if (activeTab === 'overdue') {
-			return subjectTasks.filter(t => t.deadline && t.deadline < now && t.status !== 'done');
-		}
-		return subjectTasks.filter(t => t.status !== 'done');
+
+		return sortTasks(result);
 	});
 </script>
 
@@ -108,7 +130,7 @@
 		</div>
 
 		{#each filteredTasks() as task (task.id)}
-			<div class="task-card">
+			<div class="task-card" class:is-urgent={isUrgent(task.deadline) && task.status !== 'done'}>
 				<div class="task-card-inner">
 					<div class="task-card-left-side">
 						<button
@@ -126,26 +148,26 @@
 						<h3 class="task-title" class:is-done={task.status === 'done'}>
 							{task.title}
 						</h3>
-						<div class="task-priority">
-							<div class="task-priority-wrapper {task.priority}">
-								{task.priority}
-							</div>
-						</div>
 						{#if task.deadline}
 							<p class="task-deadline">{task.deadline.toLocaleDateString('ru-RU')}</p>
 						{/if}
 					</div>
-					<div class="task-card-right-side">
-						<img src="/icons/arrowBack.svg" alt="">
+					<div class="task-priority">
+						<div class="task-priority-wrapper {task.priority}">
+							{task.priority}
+						</div>
 					</div>
 				</div>
+				{#if isUrgent(task.deadline) && task.status !== 'done'}
+					<p class="is-urgent-massage">Осталось менее одного дня</p>
+				{/if}
 			</div>
 		{:else}
 			<p class="empty-state">Заданий пока нет</p>
 		{/each}
 	</section>
 
-	<a href="/subject/new" class="add-task-button">
+	<a href="/subject/{data.subject.id}/task/new" class="add-task-button">
 		<img src="/icons/pluseIcon.svg" alt="">
 	</a>
 
@@ -169,6 +191,17 @@
 </footer>
 
 <style>
+	.is-urgent-massage {
+		margin-top: 16px;
+		font-size: 12px;
+		font-weight: 800;
+		color: var(--accent-red);
+	}
+
+	.is-urgent {
+  	border: 1.5px solid var(--accent-red);
+	}
+
 	.modal-overlay {
 		position: fixed;
 		inset: 0;
@@ -249,14 +282,6 @@
 		font-size: 16px;
 		font-weight: 800;
 		line-height: 20px;
-	}
-
-	.task-card-right-side {
-		align-self: center;
-	}
-
-	.task-card-right-side img {
-		transform: rotate(180deg);
 	}
 
 	.task-priority-wrapper {

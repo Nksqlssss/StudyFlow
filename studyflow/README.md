@@ -1,42 +1,44 @@
-# sv
+# StudyFlow
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Мобильное веб-приложение для студентов. Помогает отслеживать задания по предметам, следить за дедлайнами и не терять прогресс.
 
-## Creating a project
+## Возможности
 
-If you're seeing this, you've probably already done this step. Congrats!
+- Создание предметов с иконкой и описанием
+- Добавление заданий с приоритетом и дедлайном
+- Автоматическая сортировка — срочные задания всплывают наверх
+- Прогресс бар по каждому предмету
+- Фильтрация заданий — активные, выполненные, просроченные
+- Предупреждение когда дедлайн горит (менее 24 часов)
 
-```sh
-# create a new project
-npx sv create my-app
-```
+## Стек
 
-To recreate this project with the same configuration:
+- [SvelteKit](https://kit.svelte.dev/) — фреймворк
+- [Svelte 5](https://svelte.dev/) — UI с runes (`$state`, `$derived`, `$props`)
+- TypeScript — типизация
+- localStorage — хранение данных на клиенте
 
-```sh
-# recreate this project
-npx sv@0.13.0 create --template minimal --types ts --add prettier eslint --install npm studyflow
-```
+## Структура
 
-## Developing
+src/
+├── lib/
+│   ├── components/
+│   │   └── ui/          # SubjectCard, BottomTabbar
+│   ├── stores/
+│   │   ├── subjects.ts  # стор предметов
+│   │   └── tasks.ts     # стор заданий + derived статистика
+│   └── types.ts         # Task, Subject, SubjectIcon, TaskPriority
+└── routes/
+├── +page.svelte                        # главная — список предметов
+├── subject/
+│   ├── new/+page.svelte                # создание предмета
+│   └── [id]/
+│       ├── +page.svelte                # страница предмета
+│       ├── +page.ts                    # загрузка данных предмета
+│       └── task/new/+page.svelte       # создание задания
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+## Запуск
+```bash
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
