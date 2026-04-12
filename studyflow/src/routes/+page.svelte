@@ -31,7 +31,11 @@
 	{#each $subjects as subject (subject.id)}
 		<SubjectCard {subject} />
 	{:else}
-		<p>Предметы не добавлены</p>
+		<div class="empty-state">
+			<img src="/icons/subjectsIcon.svg" alt="">
+			<p class="empty-title">Предметов пока нет</p>
+			<span class="empty-description">Нажмите + чтобы добавить первый предмет</span>
+		</div>
 	{/each}
 
 	<a href="/subject/new" class="add-subject-button">
@@ -44,6 +48,34 @@
 </footer>
 
 <style>
+	.empty-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 25px 0;
+		border: 1px dashed var(--text-secondary);
+		border-radius: 20px;
+		margin-top: 20px;
+	}
+
+	.empty-state img {
+		margin-bottom: 12px;
+	}
+
+	.empty-title {
+		font-size: 18px;
+		font-weight: 700;
+		margin-bottom: 12px;
+		color: var(--text-secondary);
+	}
+
+	.empty-description {
+		font-size: 13px;
+		color: var(--text-secondary);
+		line-height: 1.5;
+	}
+
 	.main {
 		padding: 32px 24px 108px 24px;
 	}

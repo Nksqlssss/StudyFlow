@@ -1,10 +1,13 @@
 <script lang="ts">
-  const { data } = $props();
+	import { goto } from '$app/navigation';
 	import BottomTabbar from '$lib/components/ui/bottomTabbar.svelte';
+	import { subjects } from '$lib/stores/subjects.js';
 	import { isUrgent, tasks, tasksBySubject, taskStatsBySubject } from '$lib/stores/tasks';
 	import type { Task, TaskPriority } from '$lib/types.js';
 
 	const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high']
+
+	const { data } = $props();
 
 	const PRIORITY_WEIGHT: Record<TaskPriority, number> = {
 		high: 3,
@@ -72,6 +75,17 @@
 
 		return sortTasks(result);
 	});
+
+	let isModalSettingsOpen = $state(false)
+
+	function modalSettingToggle () {
+		isModalSettingsOpen = !isModalSettingsOpen
+	}
+
+	function handleDelete () {
+		subjects.remove(data.subject.id);
+		goto('/');
+	}
 </script>
 
 <header class="header">
@@ -81,9 +95,21 @@
 	<h1 class="main-title">
 		Предмет
 	</h1>
-	<button class="setting-button">
+	<button class="setting-button" onclick={modalSettingToggle}>
 		<img src="/icons/settingsIcon.svg" alt="">
 	</button>
+	{#if isModalSettingsOpen}
+		<div class="settings-dropdown">
+			<a href="/subject/{data.subject.id}/edit" class="dropdown-btn edit">
+				<img src="/icons/editIcon.svg" alt="">
+				Изменить
+			</a>
+			<button class="dropdown-btn delete" onclick={handleDelete}>
+				<img src="/icons/deleteIcon.svg" alt="">
+				Удалить
+			</button>
+		</div>
+	{/if}
 </header>
 
 <main class="main">
@@ -163,7 +189,11 @@
 				{/if}
 			</div>
 		{:else}
-			<p class="empty-state">Заданий пока нет</p>
+			<div class="empty-state">
+				<img src="/icons/subjectsIcon.svg" alt="">
+				<p class="empty-title">Заданий пока нет</p>
+				<span class="empty-description">Нажмите + чтобы добавить первое задание</span>
+			</div>
 		{/each}
 	</section>
 
@@ -191,6 +221,79 @@
 </footer>
 
 <style>
+	.settings-dropdown {
+		position: absolute;
+		top: 60px;
+		right: 6px;
+		background-color: #131B2E;
+		border-radius: 16px;
+		padding: 12px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		z-index: 100;
+		box-shadow: 0 8px 24px 0 #00000060;
+		min-width: 175px;
+	}
+
+	.dropdown-btn {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 12px 16px;
+		border-radius: 16px;
+		border: none;
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		background-color: #1E2A42;
+	}
+
+	.dropdown-btn img {
+		width: 18px;
+		height: 18px;
+	}
+
+	.dropdown-btn.edit {
+		color: #C0C1FF;
+	}
+
+	.dropdown-btn.delete {
+		color: #e05252;
+	}
+
+	.dropdown-btn:hover {
+		background-color: #1E2A42;
+	}
+
+	.empty-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 25px 0;
+		border: 1px dashed var(--text-secondary);
+		border-radius: 20px;
+		margin-top: 20px;
+	}
+
+	.empty-state img {
+		margin-bottom: 12px;
+	}
+
+	.empty-title {
+		font-size: 18px;
+		font-weight: 700;
+		margin-bottom: 12px;
+		color: var(--text-secondary);
+	}
+
+	.empty-description {
+		font-size: 13px;
+		color: var(--text-secondary);
+		line-height: 1.5;
+	}
+
 	.is-urgent-massage {
 		margin-top: 16px;
 		font-size: 12px;
