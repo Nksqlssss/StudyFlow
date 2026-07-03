@@ -1,74 +1,84 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { translate, type TranslationKey } from '$lib/i18n';
+	import { settings } from '$lib/stores/settings';
 	import { subjects } from '$lib/stores/subjects';
 	import type { SubjectIcon } from '$lib/types';
 
+	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
+		translate($settings.language, key, params)
+	);
+
 	let title = $state('');
-	let description = $state('');
 	let selectedIcon = $state<SubjectIcon>('code');
 
 	const ICONS: SubjectIcon[] = ['code', 'math', 'language', 'paint'];
 
 	function handleSubmit(e: Event) {
-		e.preventDefault()
+		e.preventDefault();
 		if (!title.trim()) return;
 
-		subjects.add(title.trim(), selectedIcon, description.trim() || undefined);
-		goto('/');
+		subjects.add(title.trim(), selectedIcon);
+		goto(resolve('/'));
 	}
 </script>
 
 <header class="header">
-	<a href="/" class="back-link">
-		<img src="/icons/arrowBack.svg" alt="">
+	<a href={resolve('/')} class="back-link">
+		<img src="/icons/arrowBack.svg" alt="" />
 	</a>
 	<h1 class="main-title">
-		Создать предмет
+		{t('subjects.create.title')}
 	</h1>
 </header>
 
 <main class="main">
 	<form class="create-subject-form" onsubmit={handleSubmit}>
 		<label for="subjectName">
-			<span class="label-text">Название</span>
-			<input type="text" id='subjectName' class="subject-name-input" placeholder="Название предмета" bind:value={title}>
-		</label>
-		<label for="subjectDescription">
-			<span class="label-text">Описание</span>
-			<textarea id='subjectDescription' class="subject-description-input" placeholder="Описание (необязательно)" bind:value={description}></textarea>
+			<span class="label-text">{t('subjects.form.name')}</span>
+			<input
+				type="text"
+				id="subjectName"
+				class="subject-name-input"
+				placeholder={t('subjects.form.namePlaceholder')}
+				bind:value={title}
+			/>
 		</label>
 		<p class="select-icon">
-			Иконка
+			{t('subjects.form.icon')}
 		</p>
 		<div class="icons">
-		{#each ICONS as icon}
-			<button
-				type="button"
-				class="icon-wrapper"
-				class:is-current={selectedIcon === icon}
-				onclick={() => selectedIcon = icon}
-			>
-				<img src="/icons/{icon}.svg" alt={icon} width="25" height="25">
-			</button>
-		{/each}
-</div>
-
-		<div class="study-massage">
-			<div class="tooltip-wrapper">
-				<img src="/icons/tooltipIcon.svg" alt="">
-			</div>
-			<div class="tooltip-info">
-				<p class="tooltip-title">
-					Совет от StudyFlow
-				</p>
-				<span class="massage-text">
-					Выбирайте иконку, которая лучше всего ассоциируется с вашим предметом для быстрого визуального поиска.
-				</span>
-			</div>
+			{#each ICONS as icon (icon)}
+				<button
+					type="button"
+					class="icon-wrapper"
+					class:is-current={selectedIcon === icon}
+					onclick={() => (selectedIcon = icon)}
+				>
+					<img src="/icons/{icon}.svg" alt={icon} width="25" height="25" />
+				</button>
+			{/each}
 		</div>
 
+		{#if $settings.showTips}
+			<div class="study-massage">
+				<div class="tooltip-wrapper">
+					<img src="/icons/tooltipIcon.svg" alt="" />
+				</div>
+				<div class="tooltip-info">
+					<p class="tooltip-title">
+						{t('subjects.form.tipTitle')}
+					</p>
+					<span class="massage-text">
+						{t('subjects.form.tipText')}
+					</span>
+				</div>
+			</div>
+		{/if}
+
 		<button class="submit-form-button" type="submit">
-			Создать предмет
+			{t('subjects.form.create')}
 		</button>
 	</form>
 </main>
@@ -80,7 +90,7 @@
 		column-gap: 16px;
 		margin-block: 32px 24px;
 		padding: 20px;
-		background-color: #222A3EA5;
+		background-color: var(--surface-secondary);
 		border-radius: 20px;
 	}
 
@@ -92,7 +102,7 @@
 		width: 40px;
 		height: 40px;
 		border-radius: 50%;
-		background-color: #292a4fa1;
+		background-color: var(--surface-icon);
 	}
 
 	.tooltip-wrapper img {
@@ -120,21 +130,22 @@
 		justify-content: center;
 		padding-block: 20px;
 		border-radius: 20px;
-		background: linear-gradient(90deg, #C0C1FF, #8083FF);
+		background: var(--gradient-primary);
 		border: none;
 		outline: none;
 		font-size: 16px;
 		font-weight: 700;
 		line-height: 24px;
-		color: #150066;
-		box-shadow: 0 10px 20px 0 #8083FF2A;
+		color: var(--text-on-accent);
+		box-shadow: 0 10px 20px 0 var(--shadow-accent);
 	}
 
 	.main {
 		padding: 32px 24px;
 	}
 
-	.main label, textarea, .select-icon {
+	.main label,
+	.select-icon {
 		display: flex;
 		flex-direction: column;
 		row-gap: 8px;
@@ -144,7 +155,8 @@
 		color: var(--text-muted);
 	}
 
-	.label-text, .select-icon{
+	.label-text,
+	.select-icon {
 		margin-left: 8px;
 	}
 
@@ -152,9 +164,9 @@
 		margin-bottom: 16px;
 	}
 
-	.subject-name-input, .subject-description-input {
+	.subject-name-input {
 		padding: 18px 20px;
-		background-color: #131B2E;
+		background-color: var(--surface-primary);
 		border: none;
 		outline: none;
 		border-radius: 20px;
@@ -164,15 +176,7 @@
 		margin-bottom: 24px;
 	}
 
-	.subject-description-input {
-		height: 136px;
-		font-family: var(--font-main);
-		font-weight: 400;
-		line-height: 1.5;
-		resize: none;
-	}
-
-	.subject-name-input::placeholder, .subject-description-input::placeholder {
+	.subject-name-input::placeholder {
 		color: var(--text-secondary);
 	}
 
@@ -189,13 +193,13 @@
 		width: 75px;
 		height: 75px;
 		border-radius: 20px;
-		background-color: #131B2E;
+		background-color: var(--surface-primary);
 		cursor: pointer;
 		border: none;
 	}
 
 	.is-current {
-		border: 2px #C6C0FF solid;
+		border: 2px var(--border-accent) solid;
 		background-color: var(--bg-icon);
 	}
 

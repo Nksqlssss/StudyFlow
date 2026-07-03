@@ -1,30 +1,32 @@
 <script lang="ts">
-	import BottomTabbar from '$lib/components/ui/bottomTabbar.svelte';
+	import { resolve } from '$app/paths';
+	import { translate, type TranslationKey } from '$lib/i18n';
 	import SubjectCard from '$lib/components/ui/SubjectCard.svelte';
+	import { settings } from '$lib/stores/settings';
 	import { subjects } from '$lib/stores/subjects';
+
+	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
+		translate($settings.language, key, params)
+	);
 </script>
 
 <header class="header">
 	<div class="header-left-side">
-		<h1 class="main-title">
-			StudyFlow
-		</h1>
+		<h1 class="main-title">StudyFlow</h1>
 	</div>
 	<div class="header-right-side">
-		<img src="/icons/lfIcon.svg" alt="" class="lf-image">
-		<div class="profile-icon">
-			.
-		</div>
+		<img src="/icons/lfIcon.svg" alt="" class="lf-image" />
+		<div class="profile-icon">.</div>
 	</div>
 </header>
 
 <main class="main">
 	<section class="overview">
 		<h2 class="overview-title">
-			Предметы
+			{t('subjects.title')}
 		</h2>
 		<p class="overview-description">
-			Ваш текущий прогресс обучения
+			{t('subjects.overview')}
 		</p>
 	</section>
 
@@ -32,20 +34,18 @@
 		<SubjectCard {subject} />
 	{:else}
 		<div class="empty-state">
-			<img src="/icons/subjectsIcon.svg" alt="">
-			<p class="empty-title">Предметов пока нет</p>
-			<span class="empty-description">Нажмите + чтобы добавить первый предмет</span>
+			<img src="/icons/subjectsIcon.svg" alt="" />
+			<p class="empty-title">{t('subjects.empty.title')}</p>
+			{#if $settings.showTips}
+				<span class="empty-description">{t('subjects.empty.description')}</span>
+			{/if}
 		</div>
 	{/each}
 
-	<a href="/subject/new" class="add-subject-button">
-		<img src="/icons/pluseIcon.svg" alt="">
+	<a href={resolve('/subject/new')} class="add-subject-button">
+		<img src="/icons/pluseIcon.svg" alt="" />
 	</a>
 </main>
-
-<footer class="footer">
-	<BottomTabbar />
-</footer>
 
 <style>
 	.empty-state {
@@ -135,9 +135,53 @@
 		border: none;
 		outline: none;
 		font-size: 30px;
-		color: #1000A9;
-		background: linear-gradient(135deg, #C0C1FF, #8083FF);
-		box-shadow: 0 10px 30px 0 #6366F12A;
+		color: var(--text-on-accent-strong);
+		background: var(--gradient-primary-diagonal);
+		box-shadow: 0 10px 30px 0 var(--shadow-accent-soft);
 		text-decoration: none;
+	}
+
+	@media (min-width: 768px) {
+		.header {
+			padding: 24px 40px;
+		}
+
+		.main {
+			padding: 40px;
+		}
+
+		.overview {
+			margin-bottom: 8px;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.main {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 20px;
+			align-items: start;
+		}
+
+		.overview,
+		.empty-state {
+			grid-column: 1 / -1;
+		}
+
+		.add-subject-button {
+			right: 40px;
+			bottom: 40px;
+		}
+	}
+
+	@media (min-width: 1280px) {
+		.header {
+			padding-inline: 56px;
+		}
+
+		.main {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			padding: 48px 56px;
+		}
 	}
 </style>

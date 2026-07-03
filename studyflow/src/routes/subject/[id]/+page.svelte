@@ -1,24 +1,28 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import BottomTabbar from '$lib/components/ui/bottomTabbar.svelte';
+	import { resolve } from '$app/paths';
+	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
+	import { formatDate, priorityLabel, translate, type TranslationKey } from '$lib/i18n';
+	import { settings } from '$lib/stores/settings';
 	import { subjects } from '$lib/stores/subjects.js';
 	import { isUrgent, tasks, tasksBySubject, taskStatsBySubject } from '$lib/stores/tasks';
 	import type { Task, TaskPriority } from '$lib/types.js';
 
-	const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high']
-
 	const { data } = $props();
+	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
+		translate($settings.language, key, params)
+	);
 
 	const PRIORITY_WEIGHT: Record<TaskPriority, number> = {
 		high: 3,
 		medium: 2,
-		low: 1,
+		low: 1
 	};
 
 	function sortTasks(taskList: Task[]) {
 		return [...taskList].sort((a, b) => {
-			const aUrgent = isUrgent(a.deadline) ? 10 : 0;
-			const bUrgent = isUrgent(b.deadline) ? 10 : 0;
+			const aUrgent = isUrgent(a.deadline, $settings.urgentThresholdHours) ? 10 : 0;
+			const bUrgent = isUrgent(b.deadline, $settings.urgentThresholdHours) ? 10 : 0;
 
 			const aScore = PRIORITY_WEIGHT[a.priority] + aUrgent;
 			const bScore = PRIORITY_WEIGHT[b.priority] + bUrgent;
@@ -28,85 +32,142 @@
 	}
 
 	const stats = $derived(
-    $taskStatsBySubject.get(data.subject.id) ?? { active: 0, done: 0, total: 0, progress: 0 }
-  );
+		$taskStatsBySubject.get(data.subject.id) ?? { active: 0, done: 0, total: 0, progress: 0 }
+	);
 
-	const subjectTasks = $derived(
-    $tasksBySubject.get(data.subject.id) ?? []
-  );
+	const subjectTasks = $derived($tasksBySubject.get(data.subject.id) ?? []);
 
-	let showModal = $state(false);
+	let showConfirmModal = $state(false);
+	let showDeleteModal = $state(false);
 	let pendingTaskId = $state<string | null>(null);
 	let isCompleting = $state(true);
 
 	function confirmComplete(id: string) {
-		const task = subjectTasks.find(t => t.id === id);
+		const task = subjectTasks.find((t) => t.id === id);
 		pendingTaskId = id;
 		isCompleting = task?.status !== 'done';
-		showModal = true;
+		showConfirmModal = true;
 	}
 
 	function handleConfirm() {
 		if (pendingTaskId) {
-			tasks.setStatus(pendingTaskId, isCompleting ? 'done' : 'todo');
+			tasks.setStatus(pendingTaskId, isCompleting ? 'done' : 'in_progress');
 		}
-		showModal = false;
+		showConfirmModal = false;
 		pendingTaskId = null;
 	}
 
 	function handleCancel() {
-		showModal = false;
+		showConfirmModal = false;
 		pendingTaskId = null;
 	}
 
-	let activeTab = $state<'active' | 'done' | 'overdue'>('active');
+	type TaskTab = 'active' | 'done' | 'overdue';
+	type TaskListItem = { type: 'task'; task: Task } | { type: 'completed-divider' };
+
+	let activeTab = $state<TaskTab>('active');
 
 	const filteredTasks = $derived(() => {
 		const now = new Date();
 		let result: Task[];
 
 		if (activeTab === 'done') {
-			result = subjectTasks.filter(t => t.status === 'done');
+			result = subjectTasks.filter((t) => t.status === 'done');
 		} else if (activeTab === 'overdue') {
-			result = subjectTasks.filter(t => t.deadline && t.deadline < now && t.status !== 'done');
+			result = subjectTasks.filter((t) => t.deadline && t.deadline < now && t.status !== 'done');
 		} else {
-			result = subjectTasks.filter(t => t.status !== 'done');
+			result =
+				$settings.completedTasksVisibility === 'active_list'
+					? subjectTasks
+					: subjectTasks.filter((t) => t.status !== 'done');
 		}
 
 		return sortTasks(result);
 	});
 
-	let isModalSettingsOpen = $state(false)
+	const taskListItems = $derived((): TaskListItem[] => {
+		const tasks = filteredTasks();
 
-	function modalSettingToggle () {
-		isModalSettingsOpen = !isModalSettingsOpen
+		if (activeTab !== 'active' || $settings.completedTasksVisibility !== 'active_list') {
+			return tasks.map((task) => ({ type: 'task', task }));
+		}
+
+		const activeTasks = tasks.filter((task) => task.status !== 'done');
+		const doneTasks = tasks.filter((task) => task.status === 'done');
+
+		if (doneTasks.length === 0) {
+			return activeTasks.map((task) => ({ type: 'task', task }));
+		}
+
+		return [
+			...activeTasks.map((task) => ({ type: 'task' as const, task })),
+			{ type: 'completed-divider' },
+			...doneTasks.map((task) => ({ type: 'task' as const, task }))
+		];
+	});
+
+	let isModalSettingsOpen = $state(false);
+
+	function modalSettingToggle() {
+		isModalSettingsOpen = !isModalSettingsOpen;
 	}
 
-	function handleDelete () {
+	function toggleDeleteModal() {
+		showDeleteModal = true;
+	}
+
+	function handleDelete() {
+		tasks.removeBySubject(data.subject.id);
 		subjects.remove(data.subject.id);
-		goto('/');
+		goto(resolve('/'));
 	}
+
+	function handleDeleteCancel() {
+		showDeleteModal = false;
+		isModalSettingsOpen = false;
+	}
+
+	const EMPTY_STATE_BY_TAB: Record<
+		TaskTab,
+		{
+			title: TranslationKey;
+			description: TranslationKey;
+		}
+	> = {
+		active: {
+			title: 'tasks.empty.active.title',
+			description: 'tasks.empty.active.description'
+		},
+		done: {
+			title: 'tasks.empty.done.title',
+			description: 'tasks.empty.done.description'
+		},
+		overdue: {
+			title: 'tasks.empty.overdue.title',
+			description: 'tasks.empty.overdue.description'
+		}
+	};
 </script>
 
 <header class="header">
-	<a href="/" class="back-link">
-		<img src="/icons/arrowBack.svg" alt="">
+	<a href={resolve('/')} class="back-link">
+		<img src="/icons/arrowBack.svg" alt="" />
 	</a>
 	<h1 class="main-title">
-		Предмет
+		{t('subjects.detail.title')}
 	</h1>
 	<button class="setting-button" onclick={modalSettingToggle}>
-		<img src="/icons/settingsIcon.svg" alt="">
+		<img src="/icons/settingsIcon.svg" alt="" />
 	</button>
 	{#if isModalSettingsOpen}
 		<div class="settings-dropdown">
-			<a href="/subject/{data.subject.id}/edit" class="dropdown-btn edit">
-				<img src="/icons/editIcon.svg" alt="">
-				Изменить
+			<a href={resolve(`/subject/${data.subject.id}/edit`)} class="dropdown-btn edit">
+				<img src="/icons/editIcon.svg" alt="" />
+				{t('common.edit')}
 			</a>
-			<button class="dropdown-btn delete" onclick={handleDelete}>
-				<img src="/icons/deleteIcon.svg" alt="">
-				Удалить
+			<button class="dropdown-btn delete" onclick={toggleDeleteModal}>
+				<img src="/icons/deleteIcon.svg" alt="" />
+				{t('common.delete')}
 			</button>
 		</div>
 	{/if}
@@ -116,14 +177,14 @@
 	<section class="hero-section">
 		<div class="subject-info-wrapper">
 			<div class="img-wrapper">
-				<img src="/icons/{data.subject.icon}.svg" alt="">
+				<img src="/icons/{data.subject.icon}.svg" alt="" />
 			</div>
 			<h2 class="subject-title main-title">
 				{data.subject.title}
 			</h2>
 		</div>
 		<div class="progress-info">
-			<span>Прогресс</span>
+			<span>{t('subjects.detail.progress')}</span>
 			<p>{stats.progress}%</p>
 		</div>
 		<div class="progress-bar">
@@ -132,21 +193,33 @@
 	</section>
 
 	<section class="tabbar">
-		<button class="tabbar-link" class:is-active={activeTab === 'active'} onclick={() => activeTab = 'active'}>
-			Активные
+		<button
+			class="tabbar-link"
+			class:is-active={activeTab === 'active'}
+			onclick={() => (activeTab = 'active')}
+		>
+			{t('tasks.tabs.active')}
 		</button>
-		<button class="tabbar-link" class:is-active={activeTab === 'done'} onclick={() => activeTab = 'done'}>
-			Выполненные
+		<button
+			class="tabbar-link"
+			class:is-active={activeTab === 'done'}
+			onclick={() => (activeTab = 'done')}
+		>
+			{t('tasks.tabs.done')}
 		</button>
-		<button class="tabbar-link" class:is-active={activeTab === 'overdue'} onclick={() => activeTab = 'overdue'}>
-			Просроченные
+		<button
+			class="tabbar-link"
+			class:is-active={activeTab === 'overdue'}
+			onclick={() => (activeTab = 'overdue')}
+		>
+			{t('tasks.tabs.overdue')}
 		</button>
 	</section>
 
 	<section class="tasks">
 		<div class="tasks-info">
 			<h3 class="tasks-title">
-				Задания
+				{t('tasks.title')}
 			</h3>
 			<div class="counter-wrapper">
 				<p class="tasks-counter">
@@ -155,84 +228,109 @@
 			</div>
 		</div>
 
-		{#each filteredTasks() as task (task.id)}
-			<div class="task-card" class:is-urgent={isUrgent(task.deadline) && task.status !== 'done'}>
-				<div class="task-card-inner">
-					<div class="task-card-left-side">
-						<button
-							type="button"
-							class="checkbox"
-							class:is-checked={task.status === 'done'}
-							onclick={() => confirmComplete(task.id)}
-						>
-							{#if task.status === 'done'}
-								✓
-							{/if}
-						</button>
-					</div>
-					<div class="task-card-medium">
-						<h3 class="task-title" class:is-done={task.status === 'done'}>
-							{task.title}
-						</h3>
-						{#if task.deadline}
-							<p class="task-deadline">{task.deadline.toLocaleDateString('ru-RU')}</p>
-						{/if}
-					</div>
-					<div class="task-priority">
-						<div class="task-priority-wrapper {task.priority}">
-							{task.priority}
+		{#each taskListItems() as item, index (item.type === 'task' ? item.task.id : `divider-${index}`)}
+			{#if item.type === 'completed-divider'}
+				<div class="completed-divider">
+					<span>{t('tasks.completedDivider')}</span>
+				</div>
+			{:else}
+				<div
+					class="task-card"
+					class:is-urgent={isUrgent(item.task.deadline, $settings.urgentThresholdHours) &&
+						item.task.status !== 'done'}
+				>
+					<div class="task-card-inner">
+						<div class="task-card-left-side">
+							<button
+								type="button"
+								class="checkbox"
+								class:is-checked={item.task.status === 'done'}
+								onclick={() => confirmComplete(item.task.id)}
+							>
+								{#if item.task.status === 'done'}
+									✓
+								{/if}
+							</button>
 						</div>
+						<a
+							href={resolve(`/subject/${data.subject.id}/assignment/${item.task.id}`)}
+							class="task-card-link"
+						>
+							<div class="task-card-medium">
+								<h3 class="task-title" class:is-done={item.task.status === 'done'}>
+									{item.task.title}
+								</h3>
+								{#if item.task.deadline}
+									<p class="task-deadline">{formatDate(item.task.deadline, $settings.language)}</p>
+								{/if}
+							</div>
+							<div class="task-priority">
+								<div class="task-priority-wrapper {item.task.priority}">
+									{priorityLabel($settings.language, item.task.priority)}
+								</div>
+							</div>
+							{#if isUrgent(item.task.deadline, $settings.urgentThresholdHours) && item.task.status !== 'done'}
+								<p class="is-urgent-massage">{t('subjects.urgentWarning')}</p>
+							{/if}
+						</a>
 					</div>
 				</div>
-				{#if isUrgent(task.deadline) && task.status !== 'done'}
-					<p class="is-urgent-massage">Осталось менее одного дня</p>
-				{/if}
-			</div>
+			{/if}
 		{:else}
 			<div class="empty-state">
-				<img src="/icons/subjectsIcon.svg" alt="">
-				<p class="empty-title">Заданий пока нет</p>
-				<span class="empty-description">Нажмите + чтобы добавить первое задание</span>
+				<img src="/icons/subjectsIcon.svg" alt="" />
+				<p class="empty-title">{t(EMPTY_STATE_BY_TAB[activeTab].title)}</p>
+				{#if $settings.showTips}
+					<span class="empty-description">
+						{t(EMPTY_STATE_BY_TAB[activeTab].description)}
+					</span>
+				{/if}
 			</div>
 		{/each}
 	</section>
 
-	<a href="/subject/{data.subject.id}/task/new" class="add-task-button">
-		<img src="/icons/pluseIcon.svg" alt="">
+	<a href={resolve(`/subject/${data.subject.id}/task/new`)} class="add-task-button">
+		<img src="/icons/pluseIcon.svg" alt="" />
 	</a>
 
-	{#if showModal}
-		<div class="modal-overlay">
-			<div class="modal">
-				<p class="modal-title">
-					{isCompleting ? 'Задание выполнено?' : 'Отменить выполнение?'}
-				</p>
-				<div class="modal-buttons">
-					<button class="modal-btn confirm" onclick={handleConfirm}>Да</button>
-					<button class="modal-btn cancel" onclick={handleCancel}>Отмена</button>
-				</div>
-			</div>
-		</div>
+	{#if showConfirmModal}
+		<ConfirmModal
+			title={isCompleting ? t('tasks.complete.title') : t('tasks.reopen.title')}
+			description={t('tasks.complete.description')}
+			onConfirm={handleConfirm}
+			onCancel={handleCancel}
+			confirmText={t('common.confirm')}
+			cancelText={t('common.cancel')}
+			variant="success"
+		/>
+	{/if}
+
+	{#if showDeleteModal}
+		<ConfirmModal
+			title={t('subjects.delete.title')}
+			description={t('common.deleteIrreversible')}
+			onConfirm={handleDelete}
+			onCancel={handleDeleteCancel}
+			confirmText={t('common.confirm')}
+			cancelText={t('common.cancel')}
+			variant="danger"
+		/>
 	{/if}
 </main>
-
-<footer class="footer">
-	<BottomTabbar />
-</footer>
 
 <style>
 	.settings-dropdown {
 		position: absolute;
 		top: 60px;
 		right: 6px;
-		background-color: #131B2E;
+		background-color: var(--surface-primary);
 		border-radius: 16px;
 		padding: 12px;
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
 		z-index: 100;
-		box-shadow: 0 8px 24px 0 #00000060;
+		box-shadow: 0 8px 24px 0 var(--shadow-panel);
 		min-width: 175px;
 	}
 
@@ -246,7 +344,7 @@
 		font-size: 14px;
 		font-weight: 600;
 		cursor: pointer;
-		background-color: #1E2A42;
+		background-color: var(--surface-secondary);
 	}
 
 	.dropdown-btn img {
@@ -255,15 +353,15 @@
 	}
 
 	.dropdown-btn.edit {
-		color: #C0C1FF;
+		color: var(--text-accent);
 	}
 
 	.dropdown-btn.delete {
-		color: #e05252;
+		color: var(--accent-red);
 	}
 
 	.dropdown-btn:hover {
-		background-color: #1E2A42;
+		background-color: var(--surface-secondary);
 	}
 
 	.empty-state {
@@ -302,48 +400,7 @@
 	}
 
 	.is-urgent {
-  	border: 1.5px solid var(--accent-red);
-	}
-
-	.modal-overlay {
-		position: fixed;
-		inset: 0;
-		background-color: #00000080;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		z-index: 100;
-	}
-
-	.modal {
-		background-color: #131B2E;
-		border-radius: 20px;
-		padding: 32px 24px;
-		width: calc(100% - 48px);
-		max-width: 360px;
-	}
-
-	.modal-title {
-		font-size: 18px;
-		font-weight: 700;
-		color: var(--text-primary);
-		text-align: center;
-		margin-bottom: 24px;
-	}
-
-	.modal-buttons {
-		display: flex;
-		gap: 12px;
-	}
-
-	.modal-btn {
-		flex: 1;
-		padding: 16px;
-		border-radius: 16px;
-		border: none;
-		font-size: 15px;
-		font-weight: 700;
-		cursor: pointer;
+		border: 1.5px solid var(--accent-red);
 	}
 
 	.is-done {
@@ -351,48 +408,103 @@
 		color: var(--text-muted);
 	}
 
-	.confirm {
-		background-color: #53c08f;
-		color: #fff;
-	}
-
-	.cancel {
-		background-color: #e05252;
-		color: #fff;
-	}
-
 	.task-card {
-		padding: 20px;
-		background-color: #131B2E;
-		border-radius: 20px;
+		padding: var(--task-card-padding);
+		background-color: var(--surface-primary);
+		border-radius: var(--task-card-radius);
 		margin-bottom: 12px;
+		transition:
+			transform 0.2s ease,
+			background-color 0.2s ease;
+	}
+
+	.task-card:hover {
+		background-color: var(--surface-tertiary);
+		transform: translateY(-1px);
 	}
 
 	.task-card-inner {
 		display: flex;
 		align-items: flex-start;
-		gap: 16px;
+		gap: var(--task-card-gap);
+	}
+
+	.task-card-left-side {
+		position: relative;
+		z-index: 2;
+		padding-top: 2px;
+	}
+
+	.checkbox {
+		width: var(--task-checkbox-size);
+		height: var(--task-checkbox-size);
+	}
+
+	.task-card-link {
+		flex: 1;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: var(--task-card-gap);
+		color: inherit;
+		text-decoration: none;
 	}
 
 	.task-card-medium {
-		flex: 1;
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--task-card-gap);
+		min-width: 0;
 	}
 
 	.task-title {
-		font-size: 16px;
+		font-size: var(--task-card-title-size);
 		font-weight: 800;
-		line-height: 20px;
+		line-height: var(--task-line-height);
+		overflow-wrap: anywhere;
+	}
+
+	.task-deadline {
+		font-size: var(--task-card-meta-size);
+		color: var(--text-muted);
 	}
 
 	.task-priority-wrapper {
-		display: inline-block;
+		display: flex;
+		justify-content: center;
+		align-items: center;
 		padding: 4px 10px;
-		border-radius: 20px;
-		font-size: 12px;
+		border-radius: var(--task-card-radius);
+		font-size: var(--task-card-meta-size);
 		font-weight: 600;
+	}
+
+	.task-priority {
+		display: flex;
+		justify-content: flex-end;
+	}
+
+	.completed-divider {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin: 18px 0 14px;
+		color: var(--text-secondary);
+		font-size: 12px;
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	.completed-divider::before,
+	.completed-divider::after {
+		content: '';
+		flex: 1;
+		height: 1px;
+		background-color: var(--border-primary);
+	}
+
+	.completed-divider span {
+		white-space: nowrap;
 	}
 
 	.empty-state {
@@ -415,9 +527,9 @@
 		border: none;
 		outline: none;
 		font-size: 30px;
-		color: #1000A9;
-		background: linear-gradient(135deg, #C0C1FF, #8083FF);
-		box-shadow: 0 10px 30px 0 #6366F12A;
+		color: var(--text-on-accent-strong);
+		background: var(--gradient-primary-diagonal);
+		box-shadow: 0 10px 30px 0 var(--shadow-accent-soft);
 		text-decoration: none;
 	}
 
@@ -435,14 +547,14 @@
 
 	.counter-wrapper {
 		padding: 4px 12px;
-		background-color: #2D3449;
+		background-color: var(--surface-muted);
 		border-radius: 20px;
 	}
 
 	.tasks-counter {
 		font-size: 14px;
 		line-height: 16px;
-		color: #C6C0FF;
+		color: var(--border-accent);
 	}
 
 	.tabbar {
@@ -452,7 +564,7 @@
 		align-items: center;
 		padding: 4px;
 		border-radius: 16px;
-		background-color: #131B2E;
+		background-color: var(--surface-primary);
 		font-size: 12px;
 		font-weight: 500;
 		margin-bottom: 32px;
@@ -469,7 +581,7 @@
 
 	.is-active {
 		background-color: var(--bg-icon);
-		color: #C6C0FF;
+		color: var(--border-accent);
 	}
 
 	.hero-section {
@@ -477,7 +589,7 @@
 		overflow: hidden;
 		padding: 24px;
 		border-radius: 20px;
-		background-color: #131B2E;
+		background-color: var(--surface-primary);
 		margin-bottom: 32px;
 	}
 
@@ -486,7 +598,7 @@
 		position: absolute;
 		top: -20px;
 		right: -20px;
-		background-color: #8B80FF;
+		background-color: var(--surface-icon-strong);
 		height: 60px;
 		width: 120px;
 		border-radius: 50%;
@@ -499,7 +611,7 @@
 		position: absolute;
 		bottom: 0px;
 		left: -20px;
-		background-color: #8B80FF;
+		background-color: var(--surface-icon-strong);
 		height: 60px;
 		width: 120px;
 		border-radius: 50%;
@@ -542,11 +654,11 @@
 	}
 
 	.progress-info span {
-		color: #C0C1FF;
+		color: var(--text-accent);
 	}
 
 	.progress-info p {
-		color: #8083FF;
+		color: var(--text-accent-strong);
 		font-size: 16px;
 	}
 
@@ -560,7 +672,7 @@
 	.progress-bar-inner {
 		height: 6px;
 		border-radius: 20px;
-		background: linear-gradient(90deg, #C0C1FF, #8083FF);
+		background: var(--gradient-primary);
 	}
 
 	.main {
@@ -582,7 +694,59 @@
 		background-color: transparent;
 	}
 
-	.setting-button, .back-link {
+	.setting-button,
+	.back-link {
 		margin-bottom: -5px;
+	}
+
+	@media (min-width: 768px) {
+		.header {
+			padding: 32px 40px;
+		}
+
+		.main {
+			padding: 40px;
+		}
+
+		.add-task-button {
+			right: 40px;
+			bottom: 40px;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.main {
+			display: grid;
+			grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+			gap: 32px;
+			align-items: start;
+		}
+
+		.hero-section {
+			position: sticky;
+			top: 32px;
+			grid-row: 1 / span 2;
+			margin-bottom: 0;
+		}
+
+		.tabbar,
+		.tasks {
+			grid-column: 2;
+		}
+
+		.tabbar {
+			margin-bottom: 24px;
+		}
+	}
+
+	@media (min-width: 1280px) {
+		.header {
+			padding-inline: 56px;
+		}
+
+		.main {
+			grid-template-columns: minmax(320px, 420px) minmax(0, 760px);
+			padding: 48px 56px;
+		}
 	}
 </style>
