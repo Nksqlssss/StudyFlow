@@ -22,6 +22,9 @@ build/
 # Build output
 dist/
 
+# Prisma generated client
+server/src/generated/
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
