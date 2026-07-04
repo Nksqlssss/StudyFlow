@@ -1,6 +1,7 @@
 import cors from '@fastify/cors'
 import Fastify from 'fastify'
 import { prisma } from './lib/prisma.js'
+import { authRoutes } from './routes/auth.routes.js'
 
 export function buildApp() {
   const app = Fastify({
@@ -10,6 +11,8 @@ export function buildApp() {
   app.register(cors, {
     origin: true
   });
+
+  app.register(authRoutes);
 
   app.get('/health', async () => {
     return {
