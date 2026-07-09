@@ -17,23 +17,32 @@ const loginSchema = z.object({
 });
 
 export async function authRoutes(app: FastifyInstance) {
-  app.post('/auth/register', async (request, reply) => {
-    const result = registerSchema.safeParse(request.body);
-
-    if (!result.success) {
-      return reply.status(400).send({
-        message: 'Invalid request body',
-        issues: result.error.flatten()
-      });
-    }
-
-    const { email, password, name } = result.data;
-    const normalizedEmail = email.toLowerCase();
-
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        email: normalizedEmail
+  app.post('/auth/register',
+    {
+      config: {
+        rateLimit: {
+          max: 3,
+          timeWindow: '1 minute'
+        }
       }
+    },
+    async (request, reply) => {
+      const result = registerSchema.safeParse(request.body);
+
+      if (!result.success) {
+        return reply.status(400).send({
+          message: 'Invalid request body',
+          issues: result.error.flatten()
+        });
+      }
+
+      const { email, password, name } = result.data;
+      const normalizedEmail = email.toLowerCase();
+
+      const existingUser = await prisma.user.findUnique({
+        where: {
+          email: normalizedEmail
+        }
     });
 
     if (existingUser) {
@@ -68,23 +77,32 @@ export async function authRoutes(app: FastifyInstance) {
     });
   });
 
-	app.post('/auth/login', async (request, reply) => {
-		const result = loginSchema.safeParse(request.body);
+	app.post('/auth/login',
+    {
+      config: {
+        rateLimit: {
+          max: 5,
+          timeWindow: '1 minute'
+        }
+      }
+    },
+    async (request, reply) => {
+      const result = loginSchema.safeParse(request.body);
 
-		if (!result.success) {
-			return reply.status(400).send({
-				message: 'Invalid request body',
-				issues: result.error.flatten()
-			});
-		}
+      if (!result.success) {
+        return reply.status(400).send({
+          message: 'Invalid request body',
+          issues: result.error.flatten()
+        });
+      }
 
-		const { email, password } = result.data;
-		const normalizedEmail = email.toLowerCase();
+      const { email, password } = result.data;
+      const normalizedEmail = email.toLowerCase();
 
-		const user = await prisma.user.findUnique({
-			where: {
-				email: normalizedEmail
-			}
+      const user = await prisma.user.findUnique({
+        where: {
+          email: normalizedEmail
+        }
 		});
 
 		if (!user) {

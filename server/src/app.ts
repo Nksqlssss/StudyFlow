@@ -1,5 +1,7 @@
 import cors from '@fastify/cors'
+import rateLimit from '@fastify/rate-limit'
 import Fastify from 'fastify'
+import { env } from 'node:process'
 import { prisma } from './lib/prisma.js'
 import { authRoutes } from './routes/auth.routes.js'
 
@@ -9,8 +11,13 @@ export function buildApp() {
   });
 
   app.register(cors, {
-    origin: true
+    origin: env.FRONTEND_URL
   });
+
+  app.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute'
+  })
 
   app.register(authRoutes);
 
