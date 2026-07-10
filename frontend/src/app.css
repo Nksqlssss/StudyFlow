@@ -246,7 +246,7 @@ a {
 }
 
 @media (min-width: 768px) {
-	body {
+	.app-shell {
 		padding-left: 96px;
 	}
 
@@ -288,7 +288,7 @@ a {
 }
 
 @media (min-width: 1180px) {
-	body {
+	.app-shell {
 		padding-left: 240px;
 	}
 }

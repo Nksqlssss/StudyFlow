@@ -161,7 +161,7 @@
 	</button>
 	{#if isModalSettingsOpen}
 		<div class="settings-dropdown">
-			<a href={resolve(`/subject/${data.subject.id}/edit`)} class="dropdown-btn edit">
+			<a href={resolve(`/app/subject/${data.subject.id}/edit`)} class="dropdown-btn edit">
 				<img src="/icons/editIcon.svg" alt="" />
 				{t('common.edit')}
 			</a>
@@ -253,7 +253,7 @@
 							</button>
 						</div>
 						<a
-							href={resolve(`/subject/${data.subject.id}/assignment/${item.task.id}`)}
+							href={resolve(`/app/subject/${data.subject.id}/assignment/${item.task.id}`)}
 							class="task-card-link"
 						>
 							<div class="task-card-medium">
@@ -289,7 +289,7 @@
 		{/each}
 	</section>
 
-	<a href={resolve(`/subject/${data.subject.id}/task/new`)} class="add-task-button">
+	<a href={resolve(`/app/subject/${data.subject.id}/task/new`)} class="add-task-button">
 		<img src="/icons/pluseIcon.svg" alt="" />
 	</a>
 

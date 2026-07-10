@@ -35,7 +35,7 @@
 		if (!task) return;
 
 		tasks.remove(task.id);
-		goto(resolve(`/subject/${subjectId}`));
+		goto(resolve(`/app/subject/${subjectId}`));
 	}
 
 	function toggleDeleteModal() {
@@ -44,14 +44,14 @@
 </script>
 
 <header class="header">
-	<a href={resolve(`/subject/${subjectId}`)} class="back-link">
+	<a href={resolve(`/app/subject/${subjectId}`)} class="back-link">
 		<img src="/icons/arrowBack.svg" alt="" />
 	</a>
 	<h1 class="main-title">{t('tasks.detail.title')}</h1>
 	<a
 		class="edit-button"
 		type="button"
-		href={resolve(`/subject/${subjectId}/assignment/${assignmentId}/edit`)}
+		href={resolve(`/app/subject/${subjectId}/assignment/${assignmentId}/edit`)}
 	>
 		<img src="/icons/editIcon.svg" alt="" />
 	</a>
@@ -128,7 +128,7 @@
 	<section class="not-found-card">
 		<h2>{t('tasks.detail.notFound.title')}</h2>
 		<p>{t('tasks.detail.notFound.description')}</p>
-		<a href={resolve(`/subject/${subjectId}`)}>{t('tasks.detail.backToSubject')}</a>
+		<a href={resolve(`/app/subject/${subjectId}`)}>{t('tasks.detail.backToSubject')}</a>
 	</section>
 {/if}
 

@@ -1,8 +1,10 @@
-<script>
+<script lang="ts">
 	import { browser } from '$app/environment';
-	import BottomTabbar from '$lib/components/ui/bottomTabbar.svelte';
+	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
 	import '../app.css';
+
+	let { children } = $props();
 
 	$effect(() => {
 		if (!browser) return;
@@ -11,13 +13,11 @@
 		document.documentElement.dataset.density = $settings.cardDensity;
 	});
 
-	let { children } = $props();
+	$effect(() => {
+		if (!browser) return;
+
+		auth.loadMe();
+	});
 </script>
 
-<div class="app-shell">
-	{@render children()}
-</div>
-
-<footer class="app-navigation">
-	<BottomTabbar />
-</footer>
+{@render children()}

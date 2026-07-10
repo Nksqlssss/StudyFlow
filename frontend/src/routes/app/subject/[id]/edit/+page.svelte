@@ -32,7 +32,7 @@
 		const unchanged = title.trim() === subject.title && selectedIcon === subject.icon;
 
 		if (unchanged) {
-			goto(resolve(`/subject/${data.subject.id}`));
+			goto(resolve(`/app/subject/${data.subject.id}`));
 			return;
 		}
 
@@ -44,12 +44,12 @@
 			title: title.trim(),
 			icon: selectedIcon
 		});
-		goto(resolve(`/subject/${data.subject.id}`));
+		goto(resolve(`/app/subject/${data.subject.id}`));
 	}
 </script>
 
 <header class="header">
-	<a href={resolve(`/subject/${data.subject.id}`)} class="back-link">
+	<a href={resolve(`/app/subject/${data.subject.id}`)} class="back-link">
 		<img src="/icons/arrowBack.svg" alt="" />
 	</a>
 	<h1 class="main-title">{t('subjects.edit.title')}</h1>

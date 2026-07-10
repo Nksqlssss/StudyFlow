@@ -67,7 +67,7 @@
 			priority: selectedPriority
 		});
 
-		goto(resolve(`/subject/${subjectId}/assignment/${assignmentId}`));
+		goto(resolve(`/app/subject/${subjectId}/assignment/${assignmentId}`));
 	}
 
 	let isInitialized = $state(false);
@@ -109,11 +109,11 @@
 			return;
 		}
 
-		goto(resolve(`/subject/${subjectId}/assignment/${assignmentId}`));
+		goto(resolve(`/app/subject/${subjectId}/assignment/${assignmentId}`));
 	}
 
 	function confirmDiscard() {
-		goto(resolve(`/subject/${subjectId}/assignment/${assignmentId}`));
+		goto(resolve(`/app/subject/${subjectId}/assignment/${assignmentId}`));
 	}
 
 	function cancelDiscard() {
@@ -240,7 +240,7 @@
 	<section class="not-found-card">
 		<h2>{t('tasks.detail.notFound.title')}</h2>
 		<p>{t('tasks.detail.notFound.description')}</p>
-		<a href={resolve(`/subject/${subjectId}`)}>{t('tasks.detail.backToSubject')}</a>
+		<a href={resolve(`/app/subject/${subjectId}`)}>{t('tasks.detail.backToSubject')}</a>
 	</section>
 {/if}
 

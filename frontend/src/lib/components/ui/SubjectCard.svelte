@@ -21,7 +21,7 @@
 	);
 </script>
 
-<a href={resolve(`/subject/${subject.id}`)} class="subject">
+<a href={resolve(`/app/subject/${subject.id}`)} class="subject">
 	<div class="card-name-wrapper">
 		<div class="card-info-wrapper">
 			<h3 class="subject-title">

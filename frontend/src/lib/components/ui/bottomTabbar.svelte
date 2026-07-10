@@ -1,25 +1,38 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { translate, type TranslationKey } from '$lib/i18n';
+	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
+	import ConfirmModal from './ConfirmModal.svelte';
 
 	const t = $derived((key: TranslationKey) => translate($settings.language, key));
 	const pathname = $derived($page.url.pathname);
+	let isModalOpen = $state(false)
 
-	const isSubjectsActive = $derived(pathname === '/' || pathname.startsWith('/subject'));
+	const isSubjectsActive = $derived(pathname === '/app' || pathname.startsWith('/app/subject'));
 	const isRouteActive = $derived(
 		(route: string) => pathname === route || pathname.startsWith(`${route}/`)
 	);
+
+	function toggleModal() {
+		isModalOpen = !isModalOpen
+	}
+
+	function handleLogout() {
+		auth.logout();
+		goto('/');
+	}
 </script>
 
 <div class="bottom-tabbar">
-	<a href={resolve('/')} class="brand-link">
+	<a href={resolve('/app')} class="brand-link">
 		<img src="/icons/studyFlow.svg" alt="" class="brand-icon" />
 		<span class="brand-name">StudyFlow</span>
 	</a>
 	<a
-		href={resolve('/')}
+		href={resolve('/app')}
 		class="subjects-button bottom-tabbar-button"
 		class:is-current={isSubjectsActive}
 	>
@@ -29,9 +42,9 @@
 		</p>
 	</a>
 	<a
-		href={resolve('/schedule')}
+		href={resolve('/app/schedule')}
 		class="schedule-button bottom-tabbar-button"
-		class:is-current={isRouteActive('/schedule')}
+		class:is-current={isRouteActive('/app/schedule')}
 	>
 		<img src="/icons/scheduleIcon.svg" alt="" class="tabbar-icon" />
 		<p class="schedule-button-name">
@@ -39,9 +52,9 @@
 		</p>
 	</a>
 	<a
-		href={resolve('/profile')}
+		href={resolve('/app/profile')}
 		class="profile-button bottom-tabbar-button"
-		class:is-current={isRouteActive('/profile')}
+		class:is-current={isRouteActive('/app/profile')}
 	>
 		<img src="/icons/profileIcon.svg" alt="" class="tabbar-icon" />
 		<p class="profile-button-name">
@@ -49,16 +62,32 @@
 		</p>
 	</a>
 	<a
-		href={resolve('/setting')}
+		href={resolve('/app/setting')}
 		class="settings-button bottom-tabbar-button"
-		class:is-current={isRouteActive('/setting')}
+		class:is-current={isRouteActive('/app/setting')}
 	>
 		<img src="/icons/settingsIcon.svg" alt="" class="tabbar-icon" />
 		<p class="settings-button-name">
 			{t('nav.settings')}
 		</p>
 	</a>
+	<button class="logout-button bottom-tabbar-button" type="button" onclick={toggleModal}>
+		<span class="logout-icon">⏻</span>
+		<p>Выйти</p>
+	</button>
 </div>
+
+{#if isModalOpen}
+	<ConfirmModal 
+		title={'Выйти из аккаунта?'}
+		description={'Вы можете зарегистрировать обратно в любое время'}
+		confirmText={'Выйти'}
+		cancelText={'Отмена'}
+		variant="danger"
+		onConfirm={handleLogout}
+		onCancel={toggleModal}
+	/>
+{/if}
 
 <style>
 	.bottom-tabbar {
@@ -112,6 +141,16 @@
 
 	.is-current {
 		background-color: var(--accent-primary-bg);
+	}
+
+	.logout-button {
+		cursor: pointer;
+		color: var(--state-danger-soft-text);
+	}
+
+	.logout-icon {
+		font-size: 20px;
+		line-height: 20px;
 	}
 
 	@media (min-width: 768px) {

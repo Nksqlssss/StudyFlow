@@ -46,12 +46,12 @@
 			deadline: new Date(deadline)
 		});
 
-		goto(resolve(`/subject/${subjectId}`));
+		goto(resolve(`/app/subject/${subjectId}`));
 	}
 </script>
 
 <header class="header">
-	<a href={resolve(`/subject/${subjectId}`)} class="back-link">
+	<a href={resolve(`/app/subject/${subjectId}`)} class="back-link">
 		<img src="/icons/arrowBack.svg" alt="" />
 	</a>
 	<h1 class="main-title">{t('tasks.new.title')}</h1>
