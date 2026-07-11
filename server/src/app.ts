@@ -4,6 +4,7 @@ import Fastify from 'fastify'
 import { env } from 'node:process'
 import { prisma } from './lib/prisma.js'
 import { authRoutes } from './routes/auth.routes.js'
+import { subjectsRoutes } from './routes/subjects.routes.js'
 
 export function buildApp() {
   const app = Fastify({
@@ -20,6 +21,7 @@ export function buildApp() {
   })
 
   app.register(authRoutes);
+  app.register(subjectsRoutes);
 
   app.get('/health', async () => {
     return {
