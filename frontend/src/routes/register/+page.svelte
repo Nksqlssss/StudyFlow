@@ -9,9 +9,10 @@
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
+		const trimmedName = name.trim();
 
 		await auth.register({
-			name,
+			name: trimmedName || undefined,
 			email,
 			password
 		});

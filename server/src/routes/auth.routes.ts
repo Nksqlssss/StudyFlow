@@ -72,7 +72,12 @@ export async function authRoutes(app: FastifyInstance) {
       }
     });
 
+    const accessToken = signAccessToken({
+      userId: user.id
+    });
+
     return reply.status(201).send({
+      accessToken,
       user
     });
   });

@@ -3,7 +3,7 @@ import { apiFetch } from './client'
 export type AuthUser = {
 	id: string;
 	email: string;
-	name: string;
+	name: string | null;
 	avatarUrl: string | null;
 	createdAt: string;
 	updatedAt: string;
@@ -17,7 +17,7 @@ export type LoginBody = {
 export type RegisterBody = {
 	email: string;
 	password: string;
-	name: string;
+	name?: string;
 };
 
 export type AuthResponse = {
