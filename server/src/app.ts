@@ -7,37 +7,39 @@ import { authRoutes } from './routes/auth.routes.js'
 import { subjectsRoutes } from './routes/subjects.routes.js'
 
 export function buildApp() {
-  const app = Fastify({
-    logger: true
-  });
+	const app = Fastify({
+		logger: true
+	})
 
-  app.register(cors, {
-    origin: env.FRONTEND_URL
-  });
+	app.register(cors, {
+		origin: env.FRONTEND_URL,
+		methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+		allowedHeaders: ['Content-Type', 'Authorization']
+	})
 
-  app.register(rateLimit, {
-    max: 100,
-    timeWindow: '1 minute'
-  })
+	app.register(rateLimit, {
+		max: 100,
+		timeWindow: '1 minute'
+	})
 
-  app.register(authRoutes);
-  app.register(subjectsRoutes);
+	app.register(authRoutes)
+	app.register(subjectsRoutes)
 
-  app.get('/health', async () => {
-    return {
-      status: 'ok',
-      service: 'studyflow-api'
-    };
-  });
+	app.get('/health', async () => {
+		return {
+			status: 'ok',
+			service: 'studyflow-api'
+		}
+	})
 
-  app.get('/db-health', async () => {
-    await prisma.$queryRaw`SELECT 1`;
+	app.get('/db-health', async () => {
+		await prisma.$queryRaw`SELECT 1`
 
-    return {
-      status: 'ok',
-      database: 'connected'
-    };
-  });
+		return {
+			status: 'ok',
+			database: 'connected'
+		}
+	})
 
-  return app;
+	return app
 }

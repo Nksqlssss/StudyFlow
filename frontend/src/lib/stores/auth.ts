@@ -1,6 +1,13 @@
-import { browser } from '$app/environment'
-import { getMe, login, register, type AuthUser, type LoginBody, type RegisterBody } from '$lib/api/auth'
-import { writable } from 'svelte/store'
+import { browser } from '$app/environment';
+import {
+	getMe,
+	login as loginApi,
+	register as registerApi,
+	type AuthUser,
+	type LoginBody,
+	type RegisterBody
+} from '$lib/api/auth';
+import { writable } from 'svelte/store';
 
 type AuthState = {
 	user: AuthUser | null;
@@ -14,7 +21,7 @@ const TOKEN_KEY = 'studyflow_token';
 const initialState: AuthState = {
 	user: null,
 	token: browser ? localStorage.getItem(TOKEN_KEY) : null,
-	isLoading: false,
+	isLoading: browser ? Boolean(localStorage.getItem(TOKEN_KEY)) : false,
 	error: null
 };
 
@@ -32,7 +39,7 @@ function createAuthStore() {
 			}));
 
 			try {
-				const response = await login(data);
+				const response = await loginApi(data);
 
 				if (browser) {
 					localStorage.setItem(TOKEN_KEY, response.accessToken);
@@ -61,7 +68,7 @@ function createAuthStore() {
 			}));
 
 			try {
-				const response = await register(data);
+				const response = await registerApi(data);
 
 				if (browser) {
 					localStorage.setItem(TOKEN_KEY, response.accessToken);

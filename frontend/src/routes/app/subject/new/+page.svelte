@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { translate, type TranslationKey } from '$lib/i18n';
+	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
 	import { subjects } from '$lib/stores/subjects';
 	import type { SubjectIcon } from '$lib/types';
@@ -15,17 +16,29 @@
 
 	const ICONS: SubjectIcon[] = ['code', 'math', 'language', 'paint'];
 
-	function handleSubmit(e: Event) {
+	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		if (!title.trim()) return;
 
-		subjects.add(title.trim(), selectedIcon);
-		goto(resolve('/'));
+		if (!$auth.token) {
+			goto(resolve('/login'));
+			return;
+		}
+
+		await subjects.add(
+			{
+				title: title.trim(),
+				icon: selectedIcon
+			},
+			$auth.token
+		);
+
+		goto(resolve('/app'));
 	}
 </script>
 
 <header class="header">
-	<a href={resolve('/')} class="back-link">
+	<a href={resolve('/app')} class="back-link">
 		<img src="/icons/arrowBack.svg" alt="" />
 	</a>
 	<h1 class="main-title">

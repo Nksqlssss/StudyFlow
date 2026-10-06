@@ -1,12 +1,19 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { translate, type TranslationKey } from '$lib/i18n';
 	import SubjectCard from '$lib/components/ui/SubjectCard.svelte';
+	import { translate, type TranslationKey } from '$lib/i18n';
+	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
-	import { subjects } from '$lib/stores/subjects';
+	import { subjectError, subjectLoading, subjects } from '$lib/stores/subjects';
 
 	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
 		translate($settings.language, key, params)
+	);
+
+	let searchingSubject = $state('');
+	const normalizedSearchingSubject = $derived(searchingSubject.toLowerCase().trim());
+	const filteredSubjects = $derived(
+		$subjects.filter((subject) => subject.title.toLowerCase().includes(normalizedSearchingSubject))
 	);
 </script>
 
@@ -15,7 +22,16 @@
 		<h1 class="main-title">StudyFlow</h1>
 	</div>
 	<div class="header-right-side">
-		<img src="/icons/lfIcon.svg" alt="" class="lf-image" />
+		<div class="subject-search" aria-label={t('subjects.search.label')}>
+			<input
+				type="search"
+				placeholder={t('subjects.search.placeholder')}
+				bind:value={searchingSubject}
+			/>
+			<div class="subject-search-image">
+				<img src="/icons/lfIcon.svg" alt="" />
+			</div>
+		</div>
 		<div class="profile-icon">.</div>
 	</div>
 </header>
@@ -30,9 +46,29 @@
 		</p>
 	</section>
 
-	{#each $subjects as subject (subject.id)}
-		<SubjectCard {subject} />
-	{:else}
+	{#if $subjectLoading}
+		<div class="state-card loading-state">
+			<div class="loader" aria-hidden="true"></div>
+			<p>{t('subjects.loading')}</p>
+		</div>
+	{:else if $subjectError !== null}
+		<div class="state-card error-state">
+			<div class="state-icon">!</div>
+			<div class="state-content">
+				<p class="state-title">{t('subjects.error.title')}</p>
+				<span class="state-description">{t('subjects.error.description')}</span>
+				<span class="state-details">{$subjectError}</span>
+			</div>
+			<button
+				class="retry-button"
+				type="button"
+				onclick={() => {
+					if ($auth.token === null) return;
+					subjects.load($auth.token);
+				}}>{t('subjects.error.retry')}</button
+			>
+		</div>
+	{:else if $subjects.length === 0}
 		<div class="empty-state">
 			<img src="/icons/subjectsIcon.svg" alt="" />
 			<p class="empty-title">{t('subjects.empty.title')}</p>
@@ -40,7 +76,16 @@
 				<span class="empty-description">{t('subjects.empty.description')}</span>
 			{/if}
 		</div>
-	{/each}
+	{:else if filteredSubjects.length === 0}
+		<div class="empty-state search-empty-state">
+			<img src="/icons/lfIcon.svg" alt="" />
+			<p class="empty-title">{t('subjects.search.empty')}</p>
+		</div>
+	{:else}
+		{#each filteredSubjects as subject (subject.id)}
+			<SubjectCard {subject} />
+		{/each}
+	{/if}
 
 	<a href={resolve('/app/subject/new')} class="add-subject-button">
 		<img src="/icons/pluseIcon.svg" alt="" />
@@ -48,6 +93,97 @@
 </main>
 
 <style>
+	.state-card {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		margin-top: 20px;
+		padding: 20px;
+		border: 1px solid var(--border-primary);
+		border-radius: 20px;
+		background-color: var(--surface-primary);
+		color: var(--text-secondary);
+	}
+
+	.loading-state {
+		justify-content: center;
+		min-height: 112px;
+		font-size: 14px;
+		font-weight: 700;
+	}
+
+	.loader {
+		width: 22px;
+		height: 22px;
+		border: 3px solid var(--surface-muted);
+		border-top-color: var(--accent-primary);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	.error-state {
+		align-items: flex-start;
+	}
+
+	.state-icon {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex: 0 0 auto;
+		width: 40px;
+		height: 40px;
+		border-radius: 14px;
+		background-color: var(--state-danger-soft-bg);
+		color: var(--state-danger-soft-text);
+		font-size: 20px;
+		font-weight: 900;
+	}
+
+	.state-content {
+		display: grid;
+		gap: 6px;
+		min-width: 0;
+		flex: 1;
+	}
+
+	.state-title {
+		color: var(--text-primary);
+		font-size: 16px;
+		font-weight: 800;
+		line-height: 22px;
+	}
+
+	.state-description,
+	.state-details {
+		color: var(--text-secondary);
+		font-size: 13px;
+		line-height: 18px;
+	}
+
+	.state-details {
+		color: var(--state-danger-soft-text);
+		overflow-wrap: anywhere;
+	}
+
+	.retry-button {
+		flex: 0 0 auto;
+		min-height: 40px;
+		padding: 0 16px;
+		border: none;
+		border-radius: 14px;
+		background: var(--gradient-primary);
+		color: var(--text-on-accent);
+		font-size: 13px;
+		font-weight: 800;
+		cursor: pointer;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
 	.empty-state {
 		display: flex;
 		flex-direction: column;
@@ -61,6 +197,12 @@
 
 	.empty-state img {
 		margin-bottom: 12px;
+	}
+
+	.search-empty-state img {
+		width: 28px;
+		height: 28px;
+		opacity: 0.75;
 	}
 
 	.empty-title {
@@ -110,7 +252,55 @@
 	.header-right-side {
 		display: flex;
 		align-items: center;
-		column-gap: 18px;
+		column-gap: 12px;
+	}
+
+	.subject-search {
+		display: flex;
+		align-items: center;
+		width: min(52vw, 280px);
+		height: 40px;
+		padding: 4px;
+		border: 1px solid var(--border-primary);
+		border-radius: 16px;
+		background-color: var(--surface-primary);
+		box-shadow: 0 10px 24px var(--shadow-panel);
+	}
+
+	.subject-search input {
+		min-width: 0;
+		flex: 1;
+		height: 100%;
+		padding: 0 10px 0 12px;
+		border: none;
+		outline: none;
+		background-color: transparent;
+		color: var(--text-primary);
+		font-family: var(--font-main);
+		font-size: 13px;
+		font-weight: 600;
+	}
+
+	.subject-search input::placeholder {
+		color: var(--text-muted);
+	}
+
+	.subject-search-image {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex: 0 0 auto;
+		width: 32px;
+		height: 32px;
+		border: none;
+		border-radius: 12px;
+		background: var(--gradient-primary);
+		cursor: pointer;
+	}
+
+	.subject-search-image img {
+		width: 17px;
+		height: 17px;
 	}
 
 	.profile-icon {
@@ -146,6 +336,18 @@
 			padding: 24px 40px;
 		}
 
+		.subject-search {
+			width: 320px;
+			height: 44px;
+			border-radius: 18px;
+		}
+
+		.subject-search-image {
+			width: 36px;
+			height: 36px;
+			border-radius: 14px;
+		}
+
 		.main {
 			padding: 40px;
 		}
@@ -164,7 +366,8 @@
 		}
 
 		.overview,
-		.empty-state {
+		.empty-state,
+		.state-card {
 			grid-column: 1 / -1;
 		}
 
@@ -177,6 +380,10 @@
 	@media (min-width: 1280px) {
 		.header {
 			padding-inline: 56px;
+		}
+
+		.subject-search {
+			width: 380px;
 		}
 
 		.main {

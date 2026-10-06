@@ -4,6 +4,7 @@ type ApiOptions = {
 	method?: string;
 	body?: unknown;
 	token?: string | null;
+	fetcher?: typeof fetch;
 };
 
 export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
@@ -17,7 +18,9 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
 		headers.set('Authorization', `Bearer ${options.token}`);
 	}
 
-	const response = await fetch(`${PUBLIC_API_URL}${path}`, {
+	const fetcher = options.fetcher ?? fetch;
+
+	const response = await fetcher(`${PUBLIC_API_URL}${path}`, {
 		method: options.method ?? 'GET',
 		headers,
 		body: options.body ? JSON.stringify(options.body) : undefined

@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import { formatDate, priorityLabel, translate, type TranslationKey } from '$lib/i18n';
+	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
 	import { subjects } from '$lib/stores/subjects.js';
 	import { isUrgent, tasks, tasksBySubject, taskStatsBySubject } from '$lib/stores/tasks';
@@ -114,12 +115,19 @@
 
 	function toggleDeleteModal() {
 		showDeleteModal = true;
+		isModalSettingsOpen = false;
 	}
 
-	function handleDelete() {
+	async function handleDelete() {
+		if (!$auth.token) {
+			goto(resolve('/login'));
+			return;
+		}
+
+		await subjects.remove(data.subject.id, $auth.token);
 		tasks.removeBySubject(data.subject.id);
-		subjects.remove(data.subject.id);
-		goto(resolve('/'));
+		showDeleteModal = false;
+		goto(resolve('/app'));
 	}
 
 	function handleDeleteCancel() {
@@ -150,7 +158,7 @@
 </script>
 
 <header class="header">
-	<a href={resolve('/')} class="back-link">
+	<a href={resolve('/app')} class="back-link">
 		<img src="/icons/arrowBack.svg" alt="" />
 	</a>
 	<h1 class="main-title">

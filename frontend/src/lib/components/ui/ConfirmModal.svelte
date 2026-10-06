@@ -4,10 +4,24 @@
 		description?: string;
 		confirmText?: string;
 		cancelText?: string;
-		onConfirm: () => void;
+		onConfirm: () => void | Promise<void>;
 		onCancel: () => void;
 		variant?: 'danger' | 'success' | 'default';
 	}>();
+
+	let isPending = $state(false);
+
+	async function handleConfirm() {
+		if (isPending) return;
+
+		isPending = true;
+
+		try {
+			await onConfirm();
+		} finally {
+			isPending = false;
+		}
+	}
 </script>
 
 <div class="modal-overlay">
@@ -22,12 +36,13 @@
 				class:danger={variant === 'danger'}
 				class:success={variant === 'success'}
 				class:default={variant === 'default'}
-				onclick={onConfirm}
+				onclick={handleConfirm}
 				type="button"
+				disabled={isPending}
 			>
 				{confirmText}
 			</button>
-			<button class="modal-btn cancel" onclick={onCancel} type="button">
+			<button class="modal-btn cancel" onclick={onCancel} type="button" disabled={isPending}>
 				{cancelText}
 			</button>
 		</div>
@@ -42,7 +57,7 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		z-index: 100;
+		z-index: 1000;
 	}
 
 	.modal {
@@ -82,6 +97,11 @@
 		font-size: 15px;
 		font-weight: 700;
 		cursor: pointer;
+	}
+
+	.modal-btn:disabled {
+		cursor: wait;
+		opacity: 0.72;
 	}
 
 	.confirm.danger {

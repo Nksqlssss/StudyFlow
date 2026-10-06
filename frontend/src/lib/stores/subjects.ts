@@ -1,57 +1,83 @@
-import { browser } from '$app/environment';
-import type { Subject, SubjectIcon } from '$lib/types';
+import {
+	createSubject,
+	deleteSubject,
+	getSubjects,
+	updateSubject,
+	type CreateSubjectBody,
+	type UpdateSubjectBody
+} from '$lib/api/subjects';
+import type { Subject } from '$lib/types';
 import { writable } from 'svelte/store';
 
-function load(): Subject[] {
-	if (!browser) return [];
-	try {
-		const raw = localStorage.getItem('sf_subjects');
-		if (!raw) return [];
-		return JSON.parse(raw).map((s: Subject) => ({
-			...s,
-			createdAt: new Date(s.createdAt)
-		}));
-	} catch {
-		return [];
-	}
+function toSubject(subject: {
+	id: string;
+	title: string;
+	icon: Subject['icon'];
+	createdAt: string;
+}): Subject {
+	return {
+		id: subject.id,
+		title: subject.title,
+		icon: subject.icon,
+		createdAt: new Date(subject.createdAt)
+	};
 }
 
-function save(subjects: Subject[]) {
-	if (browser) localStorage.setItem('sf_subjects', JSON.stringify(subjects));
-}
+const isLoading = writable<boolean>(false);
+const error = writable<null | string>(null);
 
 function createSubjectStore() {
-	const { subscribe, update: updateStore } = writable<Subject[]>(load());
+	const { subscribe, set, update } = writable<Subject[]>([]);
 
-	subscribe(save);
+	async function load(token: string) {
+		console.log('SUBJECTS LOAD START');
+		isLoading.set(true);
+		error.set(null);
+
+		try {
+			const response = await getSubjects(token);
+			set(response.subjects.map(toSubject));
+		} catch (err) {
+			if (!(err instanceof Error)) return;
+			error.set(`${err.name}: ${err.message}`);
+		} finally {
+			isLoading.set(false);
+		}
+	}
+
+	async function add(data: CreateSubjectBody, token: string) {
+		const response = await createSubject(data, token);
+
+		update((subjects) => [toSubject(response.subject), ...subjects]);
+	}
+
+	async function updateSubjectById(id: string, data: UpdateSubjectBody, token: string) {
+		const response = await updateSubject(id, data, token);
+		const updatedSubject = toSubject(response.subject);
+
+		update((subjects) => subjects.map((subject) => (subject.id === id ? updatedSubject : subject)));
+	}
+
+	async function remove(id: string, token: string) {
+		await deleteSubject(id, token);
+
+		update((subjects) => subjects.filter((subject) => subject.id !== id));
+	}
+
+	function clear() {
+		set([]);
+	}
 
 	return {
 		subscribe,
-
-		add(title: string, icon: SubjectIcon) {
-			updateStore((subject) => [
-				...subject,
-				{
-					id: crypto.randomUUID(),
-					icon,
-					title,
-					createdAt: new Date()
-				}
-			]);
-		},
-
-		remove(id: string) {
-			updateStore((subject) => subject.filter((s) => s.id !== id));
-		},
-
-		update(id: string, changes: Partial<Subject>) {
-			updateStore((subject) => subject.map((s) => (s.id === id ? { ...s, ...changes } : s)));
-		},
-
-		clear() {
-			updateStore(() => []);
-		}
+		load,
+		add,
+		update: updateSubjectById,
+		remove,
+		clear
 	};
 }
 
 export const subjects = createSubjectStore();
+export const subjectLoading = isLoading;
+export const subjectError = error;

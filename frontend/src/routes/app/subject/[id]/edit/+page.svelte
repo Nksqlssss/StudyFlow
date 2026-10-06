@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import { translate, type TranslationKey } from '$lib/i18n';
+	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
 	import { subjects } from '$lib/stores/subjects';
 	import type { SubjectIcon } from '$lib/types';
@@ -39,11 +41,22 @@
 		showSaveModal = true;
 	}
 
-	function confirmSave() {
-		subjects.update(data.subject.id, {
-			title: title.trim(),
-			icon: selectedIcon
-		});
+	async function confirmSave() {
+		if (!$auth.token) {
+			goto(resolve('/login'));
+			return;
+		}
+
+		await subjects.update(
+			data.subject.id,
+			{
+				title: title.trim(),
+				icon: selectedIcon
+			},
+			$auth.token
+		);
+
+		showSaveModal = false;
 		goto(resolve(`/app/subject/${data.subject.id}`));
 	}
 </script>
@@ -56,17 +69,14 @@
 </header>
 
 {#if showSaveModal}
-	<div class="modal-overlay">
-		<div class="modal">
-			<p class="modal-title">{t('subjects.form.saveConfirm')}</p>
-			<div class="modal-buttons">
-				<button class="modal-btn confirm" onclick={confirmSave}>{t('common.confirm')}</button>
-				<button class="modal-btn cancel" onclick={() => (showSaveModal = false)}
-					>{t('common.cancel')}</button
-				>
-			</div>
-		</div>
-	</div>
+	<ConfirmModal
+		title={t('subjects.form.saveConfirm')}
+		onConfirm={confirmSave}
+		onCancel={() => (showSaveModal = false)}
+		confirmText={t('common.confirm')}
+		cancelText={t('common.cancel')}
+		variant="success"
+	/>
 {/if}
 
 <main class="main">
@@ -103,57 +113,6 @@
 </main>
 
 <style>
-	.modal-overlay {
-		position: fixed;
-		inset: 0;
-		background-color: var(--overlay-bg);
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		z-index: 1000;
-	}
-
-	.modal {
-		background-color: var(--surface-primary);
-		border-radius: 20px;
-		padding: 32px 24px;
-		width: calc(100% - 48px);
-		max-width: 360px;
-	}
-
-	.modal-title {
-		font-size: 18px;
-		font-weight: 700;
-		color: var(--text-primary);
-		text-align: center;
-		margin-bottom: 24px;
-	}
-
-	.modal-buttons {
-		display: flex;
-		gap: 12px;
-	}
-
-	.modal-btn {
-		flex: 1;
-		padding: 16px;
-		border-radius: 16px;
-		border: none;
-		font-size: 15px;
-		font-weight: 700;
-		cursor: pointer;
-	}
-
-	.confirm {
-		background-color: var(--accent-success);
-		color: var(--text-on-danger);
-	}
-
-	.cancel {
-		background-color: var(--accent-red);
-		color: var(--text-on-danger);
-	}
-
 	.header {
 		display: flex;
 		align-items: center;
