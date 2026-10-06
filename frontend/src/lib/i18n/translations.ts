@@ -49,6 +49,10 @@ export const translations = {
 		'subjects.form.namePlaceholder': 'Название предмета',
 		'subjects.form.icon': 'Иконка',
 		'subjects.form.create': 'Создать предмет',
+		'subjects.form.creating': 'Создаём...',
+		'subjects.form.saving': 'Сохраняем...',
+		'subjects.form.createError': 'Не удалось создать предмет',
+		'subjects.form.updateError': 'Не удалось сохранить изменения',
 		'subjects.form.tipTitle': 'Совет от StudyFlow',
 		'subjects.form.tipText':
 			'Выбирайте иконку, которая лучше всего ассоциируется с вашим предметом для быстрого визуального поиска.',
@@ -205,6 +209,10 @@ export const translations = {
 		'subjects.form.namePlaceholder': 'Subject name',
 		'subjects.form.icon': 'Icon',
 		'subjects.form.create': 'Create subject',
+		'subjects.form.creating': 'Creating...',
+		'subjects.form.saving': 'Saving...',
+		'subjects.form.createError': 'Could not create subject',
+		'subjects.form.updateError': 'Could not save changes',
 		'subjects.form.tipTitle': 'StudyFlow tip',
 		'subjects.form.tipText':
 			'Choose an icon that best matches your subject so you can find it faster.',
@@ -360,6 +368,10 @@ export const translations = {
 		'subjects.form.namePlaceholder': 'Nazwa przedmiotu',
 		'subjects.form.icon': 'Ikona',
 		'subjects.form.create': 'Utwórz przedmiot',
+		'subjects.form.creating': 'Tworzenie...',
+		'subjects.form.saving': 'Zapisywanie...',
+		'subjects.form.createError': 'Nie udało się utworzyć przedmiotu',
+		'subjects.form.updateError': 'Nie udało się zapisać zmian',
 		'subjects.form.tipTitle': 'Wskazówka StudyFlow',
 		'subjects.form.tipText':
 			'Wybierz ikonę, która najlepiej kojarzy się z przedmiotem, aby szybciej go odnajdywać.',

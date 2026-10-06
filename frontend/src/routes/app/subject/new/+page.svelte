@@ -13,11 +13,14 @@
 
 	let title = $state('');
 	let selectedIcon = $state<SubjectIcon>('code');
+	let isSubmitting = $state(false);
+	let submitError = $state<string | null>(null);
 
 	const ICONS: SubjectIcon[] = ['code', 'math', 'language', 'paint'];
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
+		if (isSubmitting) return;
 		if (!title.trim()) return;
 
 		if (!$auth.token) {
@@ -25,15 +28,24 @@
 			return;
 		}
 
-		await subjects.add(
-			{
-				title: title.trim(),
-				icon: selectedIcon
-			},
-			$auth.token
-		);
+		isSubmitting = true;
+		submitError = null;
 
-		goto(resolve('/app'));
+		try {
+			await subjects.add(
+				{
+					title: title.trim(),
+					icon: selectedIcon
+				},
+				$auth.token
+			);
+
+			goto(resolve('/app'));
+		} catch (error) {
+			submitError = error instanceof Error ? error.message : t('subjects.form.createError');
+		} finally {
+			isSubmitting = false;
+		}
 	}
 </script>
 
@@ -90,8 +102,15 @@
 			</div>
 		{/if}
 
-		<button class="submit-form-button" type="submit">
-			{t('subjects.form.create')}
+		{#if submitError}
+			<p class="form-error">
+				<strong>{t('subjects.form.createError')}</strong>
+				<span>{submitError}</span>
+			</p>
+		{/if}
+
+		<button class="submit-form-button" type="submit" disabled={isSubmitting}>
+			{isSubmitting ? t('subjects.form.creating') : t('subjects.form.create')}
 		</button>
 	</form>
 </main>
@@ -151,6 +170,28 @@
 		line-height: 24px;
 		color: var(--text-on-accent);
 		box-shadow: 0 10px 20px 0 var(--shadow-accent);
+	}
+
+	.submit-form-button:disabled {
+		cursor: wait;
+		opacity: 0.72;
+	}
+
+	.form-error {
+		display: grid;
+		gap: 4px;
+		margin-bottom: 18px;
+		padding: 14px 16px;
+		border: 1px solid var(--state-danger-soft-border);
+		border-radius: 16px;
+		background-color: var(--state-danger-soft-bg);
+		color: var(--state-danger-soft-text);
+		font-size: 13px;
+		line-height: 18px;
+	}
+
+	.form-error strong {
+		font-size: 14px;
 	}
 
 	.main {

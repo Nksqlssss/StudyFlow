@@ -26,9 +26,12 @@
 	const ICONS: SubjectIcon[] = ['code', 'math', 'language', 'paint'];
 
 	let showSaveModal = $state(false);
+	let isSaving = $state(false);
+	let saveError = $state<string | null>(null);
 
 	function handleSubmitEdit(e: Event) {
 		e.preventDefault();
+		if (isSaving) return;
 		if (!title.trim()) return;
 
 		const unchanged = title.trim() === subject.title && selectedIcon === subject.icon;
@@ -38,26 +41,39 @@
 			return;
 		}
 
+		saveError = null;
 		showSaveModal = true;
 	}
 
 	async function confirmSave() {
+		if (isSaving) return;
+
 		if (!$auth.token) {
 			goto(resolve('/login'));
 			return;
 		}
 
-		await subjects.update(
-			data.subject.id,
-			{
-				title: title.trim(),
-				icon: selectedIcon
-			},
-			$auth.token
-		);
+		isSaving = true;
+		saveError = null;
 
-		showSaveModal = false;
-		goto(resolve(`/app/subject/${data.subject.id}`));
+		try {
+			await subjects.update(
+				data.subject.id,
+				{
+					title: title.trim(),
+					icon: selectedIcon
+				},
+				$auth.token
+			);
+
+			showSaveModal = false;
+			goto(resolve(`/app/subject/${data.subject.id}`));
+		} catch (error) {
+			saveError = error instanceof Error ? error.message : t('subjects.form.updateError');
+			showSaveModal = false;
+		} finally {
+			isSaving = false;
+		}
 	}
 </script>
 
@@ -73,7 +89,7 @@
 		title={t('subjects.form.saveConfirm')}
 		onConfirm={confirmSave}
 		onCancel={() => (showSaveModal = false)}
-		confirmText={t('common.confirm')}
+		confirmText={isSaving ? t('subjects.form.saving') : t('common.confirm')}
 		cancelText={t('common.cancel')}
 		variant="success"
 	/>
@@ -106,8 +122,15 @@
 			{/each}
 		</div>
 
-		<button class="submit-form-button" type="submit">
-			{t('common.saveChanges')}
+		{#if saveError}
+			<p class="form-error">
+				<strong>{t('subjects.form.updateError')}</strong>
+				<span>{saveError}</span>
+			</p>
+		{/if}
+
+		<button class="submit-form-button" type="submit" disabled={isSaving}>
+			{isSaving ? t('subjects.form.saving') : t('common.saveChanges')}
 		</button>
 	</form>
 </main>
@@ -214,5 +237,27 @@
 		line-height: 24px;
 		color: var(--text-on-accent);
 		box-shadow: 0 10px 20px 0 var(--shadow-accent);
+	}
+
+	.submit-form-button:disabled {
+		cursor: wait;
+		opacity: 0.72;
+	}
+
+	.form-error {
+		display: grid;
+		gap: 4px;
+		margin-bottom: 18px;
+		padding: 14px 16px;
+		border: 1px solid var(--state-danger-soft-border);
+		border-radius: 16px;
+		background-color: var(--state-danger-soft-bg);
+		color: var(--state-danger-soft-text);
+		font-size: 13px;
+		line-height: 18px;
+	}
+
+	.form-error strong {
+		font-size: 14px;
 	}
 </style>
