@@ -59,9 +59,31 @@ function createSubjectStore() {
 	}
 
 	async function remove(id: string, token: string) {
-		await deleteSubject(id, token);
+		let removedSubject: Subject | undefined;
+		let removedIndex = -1;
 
-		update((subjects) => subjects.filter((subject) => subject.id !== id));
+		update((subjects) => {
+			removedIndex = subjects.findIndex((subject) => subject.id === id);
+			removedSubject = subjects[removedIndex];
+
+			return subjects.filter((subject) => subject.id !== id);
+		});
+
+		if (removedIndex === -1) return;
+
+		try {
+			await deleteSubject(id, token);
+		} catch (error) {
+			if (removedSubject) {
+				const subjectToRestore = removedSubject;
+				update((subjects) => {
+					const restoredSubjects = [...subjects];
+					restoredSubjects.splice(removedIndex, 0, subjectToRestore);
+					return restoredSubjects;
+				});
+			}
+			throw error;
+		}
 	}
 
 	function clear() {

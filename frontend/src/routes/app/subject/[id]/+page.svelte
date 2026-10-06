@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
+	import Modal from '$lib/components/ui/Modal.svelte';
 	import { formatDate, priorityLabel, translate, type TranslationKey } from '$lib/i18n';
 	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
@@ -108,6 +109,8 @@
 	});
 
 	let isModalSettingsOpen = $state(false);
+	let isErrorModalOpen = $state(false);
+	let deleteError: Error | undefined = $state();
 
 	function modalSettingToggle() {
 		isModalSettingsOpen = !isModalSettingsOpen;
@@ -124,10 +127,17 @@
 			return;
 		}
 
-		await subjects.remove(data.subject.id, $auth.token);
-		tasks.removeBySubject(data.subject.id);
-		showDeleteModal = false;
-		goto(resolve('/app'));
+		try {
+			await subjects.remove(data.subject.id, $auth.token);
+			tasks.removeBySubject(data.subject.id);
+			showDeleteModal = false;
+			goto(resolve('/app'));
+		} catch (error) {
+			if (!(error instanceof Error)) return;
+			isErrorModalOpen = true;
+			deleteError = error;
+			showDeleteModal = false;
+		}
 	}
 
 	function handleDeleteCancel() {
@@ -322,6 +332,15 @@
 			confirmText={t('common.confirm')}
 			cancelText={t('common.cancel')}
 			variant="danger"
+		/>
+	{/if}
+
+	{#if isErrorModalOpen && deleteError}
+		<Modal
+			title={deleteError.name}
+			description={deleteError.message}
+			onConfirm={() => (isErrorModalOpen = false)}
+			confirmText={t('common.continue')}
 		/>
 	{/if}
 </main>
