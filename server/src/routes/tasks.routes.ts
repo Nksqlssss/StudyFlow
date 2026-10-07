@@ -124,6 +124,25 @@ export async function tasksRoutes(app: FastifyInstance) {
 	)
 
 	app.get(
+		'/tasks',
+		{
+			preHandler: authenticate
+		},
+		async request => {
+			const tasks = await prisma.task.findMany({
+				where: {
+					userId: request.user.id
+				},
+				orderBy: {
+					createdAt: 'desc'
+				}
+			})
+
+			return { tasks }
+		}
+	)
+
+	app.get(
 		'/tasks/:id',
 		{
 			preHandler: authenticate
