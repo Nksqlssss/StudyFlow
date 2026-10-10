@@ -30,16 +30,19 @@ function createSubjectStore() {
 	const { subscribe, set, update } = writable<Subject[]>([]);
 
 	async function load(token: string) {
-		console.log('SUBJECTS LOAD START');
 		isLoading.set(true);
 		error.set(null);
 
 		try {
 			const response = await getSubjects(token);
+
 			set(response.subjects.map(toSubject));
 		} catch (err) {
-			if (!(err instanceof Error)) return;
-			error.set(`${err.name}: ${err.message}`);
+			if (!(err instanceof Error)) {
+				error.set('Something went wrong');
+				throw err;
+			}
+			error.set(err.message);
 		} finally {
 			isLoading.set(false);
 		}
@@ -76,9 +79,11 @@ function createSubjectStore() {
 		} catch (error) {
 			if (removedSubject) {
 				const subjectToRestore = removedSubject;
+
 				update((subjects) => {
 					const restoredSubjects = [...subjects];
 					restoredSubjects.splice(removedIndex, 0, subjectToRestore);
+
 					return restoredSubjects;
 				});
 			}
