@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { formatDate, priorityLabel, translate, type TranslationKey } from '$lib/i18n';
 	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
-	import { subjects } from '$lib/stores/subjects.js';
+	import { subjectError, subjectLoaded, subjectLoading, subjects } from '$lib/stores/subjects.js';
 	import {
 		isUrgent,
 		taskError,
@@ -16,11 +17,11 @@
 	} from '$lib/stores/tasks';
 	import type { Task, TaskPriority } from '$lib/types.js';
 
-	const { data } = $props();
 	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
 		translate($settings.language, key, params)
 	);
-
+	const subjectId = $derived(page.params.id);
+	const subject = $derived($subjects.find((s) => s.id === subjectId));
 	const PRIORITY_WEIGHT: Record<TaskPriority, number> = {
 		high: 3,
 		medium: 2,
@@ -39,11 +40,15 @@
 		});
 	}
 
-	const stats = $derived(
-		$taskStatsBySubject.get(data.subject.id) ?? { active: 0, done: 0, total: 0, progress: 0 }
-	);
+	const stats = $derived.by(() => {
+		if (!subjectId) return { active: 0, done: 0, total: 0, progress: 0 };
+		return $taskStatsBySubject.get(subjectId) ?? { active: 0, done: 0, total: 0, progress: 0 };
+	});
 
-	const subjectTasks = $derived($tasksBySubject.get(data.subject.id) ?? []);
+	const subjectTasks = $derived.by(() => {
+		if (!subjectId) return [];
+		return $tasksBySubject.get(subjectId) ?? [];
+	});
 
 	let showConfirmModal = $state(false);
 	let showDeleteModal = $state(false);
@@ -137,10 +142,11 @@
 			goto(resolve('/login'));
 			return;
 		}
+		if (!subjectId) return;
 
 		try {
-			await subjects.remove(data.subject.id, $auth.token);
-			tasks.removeBySubject(data.subject.id);
+			await subjects.remove(subjectId, $auth.token);
+			tasks.removeBySubject(subjectId);
 			showDeleteModal = false;
 			goto(resolve('/app'));
 		} catch (error) {
@@ -185,12 +191,14 @@
 	<h1 class="main-title">
 		{t('subjects.detail.title')}
 	</h1>
-	<button class="setting-button" onclick={modalSettingToggle}>
-		<img src="/icons/settingsIcon.svg" alt="" />
-	</button>
-	{#if isModalSettingsOpen}
+	{#if subject}
+		<button class="setting-button" onclick={modalSettingToggle}>
+			<img src="/icons/settingsIcon.svg" alt="" />
+		</button>
+	{/if}
+	{#if subject && isModalSettingsOpen}
 		<div class="settings-dropdown">
-			<a href={resolve(`/app/subject/${data.subject.id}/edit`)} class="dropdown-btn edit">
+			<a href={resolve(`/app/subject/${subjectId}/edit`)} class="dropdown-btn edit">
 				<img src="/icons/editIcon.svg" alt="" />
 				{t('common.edit')}
 			</a>
@@ -202,162 +210,259 @@
 	{/if}
 </header>
 
-<main class="main">
-	<section class="hero-section">
-		<div class="subject-info-wrapper">
-			<div class="img-wrapper">
-				<img src="/icons/{data.subject.icon}.svg" alt="" />
-			</div>
-			<h2 class="subject-title main-title">
-				{data.subject.title}
-			</h2>
-		</div>
-		<div class="progress-info">
-			<span>{t('subjects.detail.progress')}</span>
-			<p>{stats.progress}%</p>
-		</div>
-		<div class="progress-bar">
-			<div class="progress-bar-inner" style="width: {stats.progress}%;"></div>
+{#if $subjectLoading || (!$subjectLoaded && !$subjectError)}
+	<section class="state-card loading-state">
+		<div class="loader" aria-hidden="true"></div>
+		<p>{t('subjects.loading')}</p>
+	</section>
+{:else if $subjectError}
+	<section class="state-card error-state">
+		<div class="state-icon">!</div>
+		<div class="state-content">
+			<p class="state-title">{t('subjects.error.loadTitle')}</p>
+			<span class="state-details">{$subjectError}</span>
 		</div>
 	</section>
-
-	<section class="tabbar">
-		<button
-			class="tabbar-link"
-			class:is-active={activeTab === 'active'}
-			onclick={() => (activeTab = 'active')}
-		>
-			{t('tasks.tabs.active')}
-		</button>
-		<button
-			class="tabbar-link"
-			class:is-active={activeTab === 'done'}
-			onclick={() => (activeTab = 'done')}
-		>
-			{t('tasks.tabs.done')}
-		</button>
-		<button
-			class="tabbar-link"
-			class:is-active={activeTab === 'overdue'}
-			onclick={() => (activeTab = 'overdue')}
-		>
-			{t('tasks.tabs.overdue')}
-		</button>
-	</section>
-
-	<section class="tasks">
-		<div class="tasks-info">
-			<h3 class="tasks-title">
-				{t('tasks.title')}
-			</h3>
-			<div class="counter-wrapper">
-				<p class="tasks-counter">
-					{filteredTasks().length}
-				</p>
-			</div>
-		</div>
-
-		{#each taskListItems() as item, index (item.type === 'task' ? item.task.id : `divider-${index}`)}
-			{#if item.type === 'completed-divider'}
-				<div class="completed-divider">
-					<span>{t('tasks.completedDivider')}</span>
+{:else if !subject}
+	<Modal
+		title={t('subjects.notFound.title')}
+		description={t('subjects.notFound.description')}
+		confirmText={t('subjects.notFound.back')}
+		onConfirm={() => goto(resolve('/app'))}
+	/>
+{:else}
+	<main class="main">
+		<section class="hero-section">
+			<div class="subject-info-wrapper">
+				<div class="img-wrapper">
+					<img src="/icons/{subject.icon}.svg" alt="" />
 				</div>
-			{:else}
-				<div
-					class="task-card"
-					class:is-urgent={isUrgent(item.task.deadline, $settings.urgentThresholdHours) &&
-						item.task.status !== 'done'}
-				>
-					<div class="task-card-inner">
-						<div class="task-card-left-side">
-							<button
-								type="button"
-								class="checkbox"
-								class:is-checked={item.task.status === 'done'}
-								onclick={() => confirmComplete(item.task.id)}
-							>
-								{#if item.task.status === 'done'}
-									✓
-								{/if}
-							</button>
-						</div>
-						<a
-							href={resolve(`/app/subject/${data.subject.id}/assignment/${item.task.id}`)}
-							class="task-card-link"
-						>
-							<div class="task-card-medium">
-								<h3 class="task-title" class:is-done={item.task.status === 'done'}>
-									{item.task.title}
-								</h3>
-								{#if item.task.deadline}
-									<p class="task-deadline">{formatDate(item.task.deadline, $settings.language)}</p>
-								{/if}
-							</div>
-							<div class="task-priority">
-								<div class="task-priority-wrapper {item.task.priority}">
-									{priorityLabel($settings.language, item.task.priority)}
-								</div>
-							</div>
-							{#if isUrgent(item.task.deadline, $settings.urgentThresholdHours) && item.task.status !== 'done'}
-								<p class="is-urgent-massage">{t('subjects.urgentWarning')}</p>
-							{/if}
-						</a>
+				<h2 class="subject-title main-title">
+					{subject.title}
+				</h2>
+			</div>
+			<div class="progress-info">
+				<span>{t('subjects.detail.progress')}</span>
+				<p>{stats.progress}%</p>
+			</div>
+			<div class="progress-bar">
+				<div class="progress-bar-inner" style="width: {stats.progress}%;"></div>
+			</div>
+		</section>
+
+		<section class="tabbar">
+			<button
+				class="tabbar-link"
+				class:is-active={activeTab === 'active'}
+				onclick={() => (activeTab = 'active')}
+			>
+				{t('tasks.tabs.active')}
+			</button>
+			<button
+				class="tabbar-link"
+				class:is-active={activeTab === 'done'}
+				onclick={() => (activeTab = 'done')}
+			>
+				{t('tasks.tabs.done')}
+			</button>
+			<button
+				class="tabbar-link"
+				class:is-active={activeTab === 'overdue'}
+				onclick={() => (activeTab = 'overdue')}
+			>
+				{t('tasks.tabs.overdue')}
+			</button>
+		</section>
+
+		<section class="tasks">
+			<div class="tasks-info">
+				<h3 class="tasks-title">
+					{t('tasks.title')}
+				</h3>
+				<div class="counter-wrapper">
+					<p class="tasks-counter">
+						{filteredTasks().length}
+					</p>
+				</div>
+			</div>
+
+			{#each taskListItems() as item, index (item.type === 'task' ? item.task.id : `divider-${index}`)}
+				{#if item.type === 'completed-divider'}
+					<div class="completed-divider">
+						<span>{t('tasks.completedDivider')}</span>
 					</div>
-				</div>
-			{/if}
-		{:else}
-			<div class="empty-state">
-				<img src="/icons/subjectsIcon.svg" alt="" />
-				<p class="empty-title">{t(EMPTY_STATE_BY_TAB[activeTab].title)}</p>
-				{#if $settings.showTips}
-					<span class="empty-description">
-						{t(EMPTY_STATE_BY_TAB[activeTab].description)}
-					</span>
+				{:else}
+					<div
+						class="task-card"
+						class:is-urgent={isUrgent(item.task.deadline, $settings.urgentThresholdHours) &&
+							item.task.status !== 'done'}
+					>
+						<div class="task-card-inner">
+							<div class="task-card-left-side">
+								<button
+									type="button"
+									class="checkbox"
+									class:is-checked={item.task.status === 'done'}
+									onclick={() => confirmComplete(item.task.id)}
+								>
+									{#if item.task.status === 'done'}
+										✓
+									{/if}
+								</button>
+							</div>
+							<a
+								href={resolve(`/app/subject/${subjectId}/assignment/${item.task.id}`)}
+								class="task-card-link"
+							>
+								<div class="task-card-medium">
+									<h3 class="task-title" class:is-done={item.task.status === 'done'}>
+										{item.task.title}
+									</h3>
+									{#if item.task.deadline}
+										<p class="task-deadline">
+											{formatDate(item.task.deadline, $settings.language)}
+										</p>
+									{/if}
+								</div>
+								<div class="task-priority">
+									<div class="task-priority-wrapper {item.task.priority}">
+										{priorityLabel($settings.language, item.task.priority)}
+									</div>
+								</div>
+								{#if isUrgent(item.task.deadline, $settings.urgentThresholdHours) && item.task.status !== 'done'}
+									<p class="is-urgent-massage">{t('subjects.urgentWarning')}</p>
+								{/if}
+							</a>
+						</div>
+					</div>
 				{/if}
-			</div>
-		{/each}
-	</section>
+			{:else}
+				<div class="empty-state">
+					<img src="/icons/subjectsIcon.svg" alt="" />
+					<p class="empty-title">{t(EMPTY_STATE_BY_TAB[activeTab].title)}</p>
+					{#if $settings.showTips}
+						<span class="empty-description">
+							{t(EMPTY_STATE_BY_TAB[activeTab].description)}
+						</span>
+					{/if}
+				</div>
+			{/each}
+		</section>
 
-	<a href={resolve(`/app/subject/${data.subject.id}/task/new`)} class="add-task-button">
-		<img src="/icons/pluseIcon.svg" alt="" />
-	</a>
+		<a href={resolve(`/app/subject/${subjectId}/task/new`)} class="add-task-button">
+			<img src="/icons/pluseIcon.svg" alt="" />
+		</a>
 
-	{#if showConfirmModal}
-		<ConfirmModal
-			title={isCompleting ? t('tasks.complete.title') : t('tasks.reopen.title')}
-			description={t('tasks.complete.description')}
-			onConfirm={handleConfirm}
-			onCancel={handleCancel}
-			confirmText={t('common.confirm')}
-			cancelText={t('common.cancel')}
-			variant="success"
-			error={$taskError}
-		/>
-	{/if}
+		{#if showConfirmModal}
+			<ConfirmModal
+				title={isCompleting ? t('tasks.complete.title') : t('tasks.reopen.title')}
+				description={t('tasks.complete.description')}
+				onConfirm={handleConfirm}
+				onCancel={handleCancel}
+				confirmText={t('common.confirm')}
+				cancelText={t('common.cancel')}
+				variant="success"
+				error={$taskError}
+			/>
+		{/if}
 
-	{#if showDeleteModal}
-		<ConfirmModal
-			title={t('subjects.delete.title')}
-			description={t('common.deleteIrreversible')}
-			onConfirm={handleDelete}
-			onCancel={handleDeleteCancel}
-			confirmText={t('common.confirm')}
-			cancelText={t('common.cancel')}
-			variant="danger"
-		/>
-	{/if}
+		{#if showDeleteModal}
+			<ConfirmModal
+				title={t('subjects.delete.title')}
+				description={t('common.deleteIrreversible')}
+				onConfirm={handleDelete}
+				onCancel={handleDeleteCancel}
+				confirmText={t('common.confirm')}
+				cancelText={t('common.cancel')}
+				variant="danger"
+			/>
+		{/if}
 
-	{#if isErrorModalOpen && deleteError}
-		<Modal
-			title={deleteError.name}
-			description={deleteError.message}
-			onConfirm={() => (isErrorModalOpen = false)}
-			confirmText={t('common.continue')}
-		/>
-	{/if}
-</main>
+		{#if isErrorModalOpen && deleteError}
+			<Modal
+				title={deleteError.name}
+				description={deleteError.message}
+				onConfirm={() => (isErrorModalOpen = false)}
+				confirmText={t('common.continue')}
+			/>
+		{/if}
+	</main>
+{/if}
 
 <style>
+	.state-card {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		margin: 32px 24px;
+		padding: 20px;
+		border: 1px solid var(--border-primary);
+		border-radius: 20px;
+		background-color: var(--surface-primary);
+		color: var(--text-secondary);
+	}
+
+	.loading-state {
+		justify-content: center;
+		min-height: 112px;
+		font-size: 14px;
+		font-weight: 700;
+	}
+
+	.loader {
+		width: 22px;
+		height: 22px;
+		border: 3px solid var(--surface-muted);
+		border-top-color: var(--accent-primary);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	.error-state {
+		align-items: flex-start;
+	}
+
+	.state-icon {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex: 0 0 auto;
+		width: 40px;
+		height: 40px;
+		border-radius: 14px;
+		background-color: var(--state-danger-soft-bg);
+		color: var(--state-danger-soft-text);
+		font-size: 20px;
+		font-weight: 900;
+	}
+
+	.state-content {
+		display: grid;
+		gap: 6px;
+		min-width: 0;
+		flex: 1;
+	}
+
+	.state-title {
+		color: var(--text-primary);
+		font-size: 16px;
+		font-weight: 800;
+		line-height: 22px;
+	}
+
+	.state-details {
+		color: var(--state-danger-soft-text);
+		font-size: 13px;
+		line-height: 18px;
+		overflow-wrap: anywhere;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
 	.settings-dropdown {
 		position: absolute;
 		top: 60px;

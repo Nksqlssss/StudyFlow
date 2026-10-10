@@ -24,6 +24,7 @@ function toSubject(subject: {
 }
 
 const isLoading = writable<boolean>(false);
+const isLoaded = writable(false);
 const error = writable<null | string>(null);
 
 function createSubjectStore() {
@@ -37,12 +38,15 @@ function createSubjectStore() {
 			const response = await getSubjects(token);
 
 			set(response.subjects.map(toSubject));
+			isLoaded.set(true);
 		} catch (err) {
 			if (!(err instanceof Error)) {
 				error.set('Something went wrong');
+				isLoaded.set(true);
 				throw err;
 			}
 			error.set(err.message);
+			isLoaded.set(true);
 		} finally {
 			isLoading.set(false);
 		}
@@ -93,6 +97,9 @@ function createSubjectStore() {
 
 	function clear() {
 		set([]);
+		isLoaded.set(false);
+		isLoading.set(false);
+		error.set(null);
 	}
 
 	return {
@@ -107,4 +114,5 @@ function createSubjectStore() {
 
 export const subjects = createSubjectStore();
 export const subjectLoading = isLoading;
+export const subjectLoaded = isLoaded;
 export const subjectError = error;
