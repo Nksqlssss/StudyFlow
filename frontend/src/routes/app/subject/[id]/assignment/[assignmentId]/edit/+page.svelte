@@ -3,10 +3,20 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
+	import Modal from '$lib/components/ui/Modal.svelte';
 	import { priorityLabel, statusLabel, translate, type TranslationKey } from '$lib/i18n';
+	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
-	import { tasks } from '$lib/stores/tasks';
+	import {
+		taskError,
+		taskFetchError,
+		taskFetching,
+		taskHasLoaded,
+		taskLoading,
+		tasks
+	} from '$lib/stores/tasks';
 	import type { TaskPriority, TaskStatus } from '$lib/types';
+	import { onMount } from 'svelte';
 
 	const subjectId = $derived($page.params.id ?? '');
 	const assignmentId = $derived($page.params.assignmentId ?? '');
@@ -16,21 +26,15 @@
 	const task = $derived(
 		$tasks.find((task) => task.id === assignmentId && task.subjectId === subjectId)
 	);
-	function toDateInputValue(date?: Date): string {
-		if (!date) return '';
-
-		const year = date.getFullYear();
-		const month = String(date.getMonth() + 1).padStart(2, '0');
-		const day = String(date.getDate()).padStart(2, '0');
-
-		return `${year}-${month}-${day}`;
-	}
 
 	let title = $state('');
 	let description = $state('');
 	let deadline = $state('');
-	let selectedStatus = $state<TaskStatus>('todo');
 	let selectedPriority = $state<TaskPriority>('medium');
+	let selectedStatus = $state<TaskStatus>('todo');
+	let dateInput = $state<HTMLInputElement | null>(null);
+	let isInitialized = $state(false);
+	let showDiscardModal = $state(false);
 
 	let initialForm = $state({
 		title: '',
@@ -43,7 +47,19 @@
 	const STATUSES: TaskStatus[] = ['todo', 'in_progress', 'done'];
 	const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high'];
 
-	let dateInput = $state<HTMLInputElement | null>(null);
+	onMount(() => {
+		taskError.set(null);
+	});
+
+	function toDateInputValue(date?: Date): string {
+		if (!date) return '';
+
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+
+		return `${year}-${month}-${day}`;
+	}
 
 	function openCalendar() {
 		if (dateInput?.showPicker) {
@@ -53,24 +69,27 @@
 		}
 	}
 
-	function handleSubmit(e: Event) {
+	async function handleSubmit(e: Event) {
 		e.preventDefault();
 
+		if ($taskLoading) return;
+		if (!$auth.token) return;
 		if (!task) return;
 		if (!title.trim()) return;
 
-		tasks.update(assignmentId, {
+		const updateTaskBody = {
 			title: title.trim(),
-			description: description.trim() || undefined,
-			deadline: deadline ? new Date(`${deadline}T00:00:00`) : undefined,
+			description: description.trim() || null,
+			deadline: deadline ? new Date(`${deadline}T00:00:00`) : null,
 			status: selectedStatus,
 			priority: selectedPriority
-		});
+		};
 
-		goto(resolve(`/app/subject/${subjectId}/assignment/${assignmentId}`));
+		try {
+			await tasks.update($auth.token, assignmentId, updateTaskBody);
+			await goto(resolve(`/app/subject/${subjectId}/assignment/${assignmentId}`));
+		} catch (error) {}
 	}
-
-	let isInitialized = $state(false);
 
 	$effect(() => {
 		if (!task || isInitialized) return;
@@ -101,8 +120,6 @@
 			selectedPriority !== initialForm.priority
 	);
 
-	let showDiscardModal = $state(false);
-
 	function requestLeave() {
 		if (hasUnsavedChanges) {
 			showDiscardModal = true;
@@ -128,9 +145,22 @@
 	<h1 class="main-title">{t('tasks.edit.title')}</h1>
 </header>
 
-{#if task}
+{#if $taskFetching || (!$taskHasLoaded && !$taskFetchError)}
+	<section class="state-card loading-state">
+		<div class="loader" aria-hidden="true"></div>
+		<p>{t('tasks.loading')}</p>
+	</section>
+{:else if !$taskHasLoaded && $taskFetchError}
+	<section class="state-card error-state">
+		<div class="state-icon">!</div>
+		<div class="state-content">
+			<p class="state-title">{t('tasks.error.loadTitle')}</p>
+			<span class="state-details">{$taskFetchError}</span>
+		</div>
+	</section>
+{:else if task && $taskHasLoaded}
 	<main class="main edit-task-page">
-		<form class="edit-task-form" onsubmit={handleSubmit}>
+		<form class="edit-task-form" onsubmit={handleSubmit} class:error-border={$taskError}>
 			<section class="form-section main-fields">
 				<label for="taskTitle">
 					<span class="label-text">{t('tasks.form.title')}</span>
@@ -218,9 +248,15 @@
 				<button type="button" class="cancel-link" onclick={requestLeave}>
 					{t('common.cancel')}
 				</button>
-				<button class="submit-form-button" type="submit">
-					{t('common.saveChanges')}
+				<button class="submit-form-button" type="submit" disabled={$taskLoading}>
+					{$taskLoading ? t('tasks.form.updating') : t('common.saveChanges')}
 				</button>
+				{#if $taskError}
+					<div class="form-error">
+						<strong>{t('tasks.error.title')}</strong>
+						<span>{$taskError}</span>
+					</div>
+				{/if}
 			</section>
 		</form>
 
@@ -236,15 +272,111 @@
 			/>
 		{/if}
 	</main>
-{:else}
-	<section class="not-found-card">
-		<h2>{t('tasks.detail.notFound.title')}</h2>
-		<p>{t('tasks.detail.notFound.description')}</p>
-		<a href={resolve(`/app/subject/${subjectId}`)}>{t('tasks.detail.backToSubject')}</a>
-	</section>
+{:else if $taskHasLoaded && !task}
+	<Modal
+		title={t('tasks.detail.notFound.title')}
+		description={t('tasks.detail.notFound.description')}
+		confirmText={t('tasks.detail.backToSubject')}
+		onConfirm={() => {
+			goto(`/app/subject/${subjectId}`);
+		}}
+	/>
 {/if}
 
 <style>
+	.state-card {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		margin: 32px 24px;
+		padding: 20px;
+		border: 1px solid var(--border-primary);
+		border-radius: 20px;
+		background-color: var(--surface-primary);
+		color: var(--text-secondary);
+	}
+
+	.loading-state {
+		justify-content: center;
+		min-height: 112px;
+		font-size: 14px;
+		font-weight: 700;
+	}
+
+	.loader {
+		width: 22px;
+		height: 22px;
+		border: 3px solid var(--surface-muted);
+		border-top-color: var(--accent-primary);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	.error-state {
+		align-items: flex-start;
+	}
+
+	.state-icon {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex: 0 0 auto;
+		width: 40px;
+		height: 40px;
+		border-radius: 14px;
+		background-color: var(--state-danger-soft-bg);
+		color: var(--state-danger-soft-text);
+		font-size: 20px;
+		font-weight: 900;
+	}
+
+	.state-content {
+		display: grid;
+		gap: 6px;
+		min-width: 0;
+		flex: 1;
+	}
+
+	.state-title {
+		color: var(--text-primary);
+		font-size: 16px;
+		font-weight: 800;
+		line-height: 22px;
+	}
+
+	.state-details {
+		color: var(--state-danger-soft-text);
+		font-size: 13px;
+		line-height: 18px;
+		overflow-wrap: anywhere;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.error-border {
+		border: 1px solid var(--accent-red) !important;
+	}
+
+	.form-error {
+		display: grid;
+		gap: 4px;
+		padding: 14px 16px;
+		border: 1px solid var(--state-danger-soft-border);
+		border-radius: 16px;
+		background-color: var(--state-danger-soft-bg);
+		color: var(--state-danger-soft-text);
+		font-size: 13px;
+		line-height: 18px;
+	}
+
+	.form-error strong {
+		font-size: 14px;
+	}
+
 	.header {
 		display: flex;
 		align-items: center;
@@ -457,6 +589,11 @@
 		cursor: pointer;
 	}
 
+	.submit-form-button:disabled {
+		cursor: wait;
+		opacity: 0.72;
+	}
+
 	.not-found-card {
 		width: 100%;
 		min-height: calc(90vh - 96px);
@@ -467,25 +604,6 @@
 		gap: 16px;
 	}
 
-	.not-found-card h2 {
-		font-size: 32px;
-		font-weight: 700;
-	}
-
-	.not-found-card a {
-		padding: 16px 24px;
-		background-color: var(--surface-primary);
-		border-radius: 16px;
-		border: var(--border-muted) 1px solid;
-		margin-top: 8px;
-		transition-duration: 0.4s;
-	}
-
-	.not-found-card a:hover {
-		background-color: var(--surface-primary);
-		transform: translateY(-2px);
-	}
-
 	@media (min-width: 768px) {
 		.header {
 			padding: 32px 40px;
@@ -493,6 +611,10 @@
 
 		.edit-task-page {
 			padding: 40px;
+		}
+
+		.state-card {
+			margin: 40px;
 		}
 
 		.segmented-list {
@@ -540,6 +662,10 @@
 
 		.edit-task-page {
 			padding: 48px 56px;
+		}
+
+		.state-card {
+			margin: 48px 56px;
 		}
 	}
 </style>

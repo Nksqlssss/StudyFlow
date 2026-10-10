@@ -8,6 +8,8 @@ import {
 	type RegisterBody
 } from '$lib/api/auth';
 import { writable } from 'svelte/store';
+import { subjects } from './subjects';
+import { tasks } from './tasks';
 
 type AuthState = {
 	user: AuthUser | null;
@@ -143,6 +145,9 @@ function createAuthStore() {
 				isLoading: false,
 				error: null
 			});
+
+			subjects.clear();
+			tasks.clear();
 		}
 	};
 }

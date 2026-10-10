@@ -3,9 +3,11 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { priorityLabel, translate, type TranslationKey } from '$lib/i18n';
+	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
-	import { tasks } from '$lib/stores/tasks';
+	import { taskError, taskLoading, tasks } from '$lib/stores/tasks';
 	import type { TaskPriority } from '$lib/types';
+	import { onMount } from 'svelte';
 
 	const subjectId = $derived($page.params.id ?? '');
 	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
@@ -15,12 +17,15 @@
 	let title = $state('');
 	let description = $state('');
 	let deadline = $state('');
-	let showError = $state(false);
 	let selectedPriority = $state<TaskPriority>($settings.defaultTaskPriority);
 
 	const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high'];
 
 	let dateInput: HTMLInputElement;
+
+	onMount(() => {
+		taskError.set(null);
+	});
 
 	function openCalendar() {
 		if (dateInput.showPicker) {
@@ -30,23 +35,24 @@
 		}
 	}
 
-	function handleSubmit(e: Event) {
+	async function handleSubmit(e: Event) {
 		e.preventDefault();
-		if (!title.trim()) return;
-		if (!deadline) {
-			showError = true;
-			return;
-		}
 
-		tasks.add({
-			subjectId,
+		if ($taskLoading) return;
+		if (!title.trim()) return;
+		if (!$auth.token) return;
+
+		const taskBody = {
 			title: title.trim(),
 			description: description.trim() || undefined,
 			priority: selectedPriority,
-			deadline: new Date(deadline)
-		});
+			deadline: deadline ? new Date(deadline) : undefined
+		};
 
-		goto(resolve(`/app/subject/${subjectId}`));
+		try {
+			await tasks.add($auth.token, subjectId, taskBody);
+			await goto(resolve(`/app/subject/${subjectId}`));
+		} catch (error) {}
 	}
 </script>
 
@@ -58,7 +64,7 @@
 </header>
 
 <main class="main">
-	<form class="create-task-form" onsubmit={handleSubmit}>
+	<form class="create-task-form" onsubmit={handleSubmit} class:error-border={$taskError}>
 		<label for="taskTitle">
 			<span class="label-text">{t('tasks.form.title')}</span>
 			<input
@@ -86,16 +92,11 @@
 				type="date"
 				id="taskDeadline"
 				class="input"
-				class:error-border={showError}
 				bind:value={deadline}
 				bind:this={dateInput}
 				onclick={openCalendar}
 			/>
 		</label>
-		{#if showError}
-			<p class="error-text">{t('tasks.form.required')}</p>
-		{/if}
-
 		<p class="select-label">{t('tasks.form.priority')}</p>
 		<div class="priorities">
 			{#each PRIORITIES as priority (priority)}
@@ -110,24 +111,22 @@
 			{/each}
 		</div>
 
-		<button class="submit-form-button" type="submit">
-			{t('tasks.form.create')}
+		<button class="submit-form-button" type="submit" disabled={$taskLoading}>
+			{$taskLoading ? t('tasks.form.creating') : t('tasks.form.create')}
 		</button>
+
+		{#if $taskError}
+			<div class="form-error">
+				<strong>{t('tasks.error.title')}</strong>
+				<span>{$taskError}</span>
+			</div>
+		{/if}
 	</form>
 </main>
 
 <style>
 	.error-border {
 		border: 1px solid var(--accent-red) !important;
-	}
-
-	.error-text {
-		color: var(--accent-red);
-		font-size: 12px;
-		font-weight: 800;
-		margin-top: -17px;
-		margin-bottom: 16px;
-		margin-left: 8px;
 	}
 
 	.header {
@@ -253,5 +252,27 @@
 		line-height: 24px;
 		color: var(--text-on-accent);
 		box-shadow: 0 10px 20px 0 var(--shadow-accent);
+	}
+
+	.submit-form-button:disabled {
+		cursor: wait;
+		opacity: 0.72;
+	}
+
+	.form-error {
+		display: grid;
+		gap: 4px;
+		margin-top: 16px;
+		padding: 14px 16px;
+		border: 1px solid var(--state-danger-soft-border);
+		border-radius: 16px;
+		background-color: var(--state-danger-soft-bg);
+		color: var(--state-danger-soft-text);
+		font-size: 13px;
+		line-height: 18px;
+	}
+
+	.form-error strong {
+		font-size: 14px;
 	}
 </style>

@@ -7,7 +7,13 @@
 	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
 	import { subjects } from '$lib/stores/subjects.js';
-	import { isUrgent, tasks, tasksBySubject, taskStatsBySubject } from '$lib/stores/tasks';
+	import {
+		isUrgent,
+		taskError,
+		tasks,
+		tasksBySubject,
+		taskStatsBySubject
+	} from '$lib/stores/tasks';
 	import type { Task, TaskPriority } from '$lib/types.js';
 
 	const { data } = $props();
@@ -45,18 +51,23 @@
 	let isCompleting = $state(true);
 
 	function confirmComplete(id: string) {
+		taskError.set(null);
 		const task = subjectTasks.find((t) => t.id === id);
 		pendingTaskId = id;
 		isCompleting = task?.status !== 'done';
 		showConfirmModal = true;
 	}
 
-	function handleConfirm() {
-		if (pendingTaskId) {
-			tasks.setStatus(pendingTaskId, isCompleting ? 'done' : 'in_progress');
-		}
-		showConfirmModal = false;
-		pendingTaskId = null;
+	async function handleConfirm() {
+		try {
+			if (pendingTaskId) {
+				if (!$auth.token) return;
+
+				await tasks.setStatus($auth.token, pendingTaskId, isCompleting ? 'done' : 'in_progress');
+			}
+			showConfirmModal = false;
+			pendingTaskId = null;
+		} catch (error) {}
 	}
 
 	function handleCancel() {
@@ -320,6 +331,7 @@
 			confirmText={t('common.confirm')}
 			cancelText={t('common.cancel')}
 			variant="success"
+			error={$taskError}
 		/>
 	{/if}
 

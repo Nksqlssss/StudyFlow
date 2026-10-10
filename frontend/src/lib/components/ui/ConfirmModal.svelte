@@ -1,13 +1,15 @@
 <script lang="ts">
-	const { description, onConfirm, onCancel, title, confirmText, cancelText, variant } = $props<{
-		title: string;
-		description?: string;
-		confirmText?: string;
-		cancelText?: string;
-		onConfirm: () => void | Promise<void>;
-		onCancel: () => void;
-		variant?: 'danger' | 'success' | 'default';
-	}>();
+	const { description, onConfirm, onCancel, title, confirmText, cancelText, variant, error } =
+		$props<{
+			title: string;
+			description?: string;
+			confirmText?: string;
+			cancelText?: string;
+			onConfirm: () => void | Promise<void>;
+			onCancel: () => void;
+			variant?: 'danger' | 'success' | 'default';
+			error?: string | null;
+		}>();
 
 	let isPending = $state(false);
 
@@ -46,10 +48,27 @@
 				{cancelText}
 			</button>
 		</div>
+		{#if error}
+			<p class="error-text">{error}</p>
+		{/if}
 	</div>
 </div>
 
 <style>
+	.error-text {
+		margin-top: 16px;
+		padding: 12px 14px;
+		border: 1px solid var(--state-danger-soft-border);
+		border-radius: 14px;
+		background-color: var(--state-danger-soft-bg);
+		color: var(--state-danger-soft-text);
+		font-size: 13px;
+		font-weight: 700;
+		line-height: 18px;
+		text-align: center;
+		overflow-wrap: anywhere;
+	}
+
 	.modal-overlay {
 		position: fixed;
 		inset: 0;

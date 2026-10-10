@@ -3,6 +3,7 @@
 	import BottomTabbar from '$lib/components/ui/bottomTabbar.svelte';
 	import { auth } from '$lib/stores/auth';
 	import { subjects } from '$lib/stores/subjects';
+	import { tasks } from '$lib/stores/tasks';
 
 	let { children } = $props();
 
@@ -14,7 +15,13 @@
 			return;
 		}
 
-		subjects.load($auth.token);
+		void subjects.load($auth.token).catch((error) => {
+			console.error('Failed to load subjects:', error);
+		});
+
+		void tasks.loadAll($auth.token).catch((error) => {
+			console.error('Failed to load tasks:', error);
+		});
 	});
 </script>
 
