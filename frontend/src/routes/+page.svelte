@@ -16,17 +16,20 @@
 		{
 			metric: '01',
 			title: 'Предметы под контролем',
-			description: 'Каждый предмет живёт отдельно: прогресс, задания, приоритеты и понятная картина нагрузки.'
+			description:
+				'Каждый предмет живёт отдельно: прогресс, задания, приоритеты и понятная картина нагрузки.'
 		},
 		{
 			metric: '02',
 			title: 'Задания без хаоса',
-			description: 'Активные, выполненные и срочные задачи разделены так, чтобы не искать важное глазами.'
+			description:
+				'Активные, выполненные и срочные задачи разделены так, чтобы не искать важное глазами.'
 		},
 		{
 			metric: '03',
 			title: 'Всегда под рукой',
-			description: 'Открывай StudyFlow, когда нужно быстро понять, что делать дальше и на чём сфокусироваться.'
+			description:
+				'Открывай StudyFlow, когда нужно быстро понять, что делать дальше и на чём сфокусироваться.'
 		}
 	];
 </script>
@@ -49,8 +52,8 @@
 			<p class="eyebrow">Учёба без хаоса</p>
 			<h1>Учёба наконец выглядит управляемой</h1>
 			<p class="hero-description">
-				StudyFlow собирает предметы, задания, дедлайны и прогресс в спокойный рабочий стол,
-				который хочется открыть перед учёбой, а не закрыть через пять секунд.
+				StudyFlow собирает предметы, задания, дедлайны и прогресс в спокойный рабочий стол, который
+				хочется открыть перед учёбой, а не закрыть через пять секунд.
 			</p>
 			<div class="hero-actions">
 				<a href={resolve('/register')} class="primary-link">Начать бесплатно</a>
@@ -125,7 +128,7 @@
 		</div>
 
 		<div class="features-grid">
-			{#each features as feature}
+			{#each features as feature (feature.title)}
 				<article class="feature-card">
 					<span>{feature.metric}</span>
 					<h3>{feature.title}</h3>
@@ -156,7 +159,11 @@
 		background:
 			linear-gradient(180deg, transparent 0%, var(--bg-primary) 94%),
 			radial-gradient(circle at 78% 24%, var(--accent-primary-bg), transparent 34%),
-			radial-gradient(circle at 12% 78%, color-mix(in srgb, var(--accent-success) 18%, transparent), transparent 32%),
+			radial-gradient(
+				circle at 12% 78%,
+				color-mix(in srgb, var(--accent-success) 18%, transparent),
+				transparent 32%
+			),
 			var(--bg-primary);
 	}
 
@@ -327,7 +334,11 @@
 		border: 1px solid var(--border-primary);
 		border-radius: 30px;
 		background:
-			linear-gradient(145deg, color-mix(in srgb, var(--surface-primary) 94%, transparent), var(--surface-tertiary)),
+			linear-gradient(
+				145deg,
+				color-mix(in srgb, var(--surface-primary) 94%, transparent),
+				var(--surface-tertiary)
+			),
 			var(--surface-primary);
 		box-shadow: 0 34px 120px var(--shadow-panel);
 		backdrop-filter: blur(18px);
@@ -337,7 +348,12 @@
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(120deg, transparent 0%, color-mix(in srgb, var(--accent-primary) 16%, transparent) 48%, transparent 100%);
+		background: linear-gradient(
+			120deg,
+			transparent 0%,
+			color-mix(in srgb, var(--accent-primary) 16%, transparent) 48%,
+			transparent 100%
+		);
 		transform: translateX(-70%);
 		animation: sheen 5.6s ease-in-out 1s infinite;
 	}

@@ -9,7 +9,7 @@
 
 	const t = $derived((key: TranslationKey) => translate($settings.language, key));
 	const pathname = $derived($page.url.pathname);
-	let isModalOpen = $state(false)
+	let isModalOpen = $state(false);
 
 	const isSubjectsActive = $derived(pathname === '/app' || pathname.startsWith('/app/subject'));
 	const isRouteActive = $derived(
@@ -17,12 +17,12 @@
 	);
 
 	function toggleModal() {
-		isModalOpen = !isModalOpen
+		isModalOpen = !isModalOpen;
 	}
 
 	function handleLogout() {
 		auth.logout();
-		goto('/');
+		goto(resolve('/'));
 	}
 </script>
 
@@ -78,11 +78,11 @@
 </div>
 
 {#if isModalOpen}
-	<ConfirmModal 
-		title={'Выйти из аккаунта?'}
-		description={'Вы можете зарегистрировать обратно в любое время'}
-		confirmText={'Выйти'}
-		cancelText={'Отмена'}
+	<ConfirmModal
+		title="Выйти из аккаунта?"
+		description="Вы можете зарегистрировать обратно в любое время"
+		confirmText="Выйти"
+		cancelText="Отмена"
 		variant="danger"
 		onConfirm={handleLogout}
 		onCancel={toggleModal}

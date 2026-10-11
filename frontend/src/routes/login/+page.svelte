@@ -15,7 +15,7 @@
 		});
 
 		if (!$auth.error) {
-			goto('/app');
+			goto(resolve('/app'));
 		}
 	}
 </script>
@@ -30,9 +30,7 @@
 		<div class="auth-copy">
 			<p class="eyebrow">Вход</p>
 			<h1>Продолжи с того места, где остановился</h1>
-			<p>
-				Войди в аккаунт, чтобы вернуться к своим предметам, заданиям и учебному прогрессу.
-			</p>
+			<p>Войди в аккаунт, чтобы вернуться к своим предметам, заданиям и учебному прогрессу.</p>
 			<div class="auth-highlights">
 				<span>Предметы</span>
 				<span>Задания</span>
@@ -48,11 +46,11 @@
 
 			<label>
 				<span>Email</span>
-				<input 
+				<input
 					type="email"
-					name="email" 
-					placeholder="you@example.com" 
-					autocomplete="email" 
+					name="email"
+					placeholder="you@example.com"
+					autocomplete="email"
 					bind:value={email}
 				/>
 			</label>

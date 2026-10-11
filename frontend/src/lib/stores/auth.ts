@@ -8,6 +8,7 @@ import {
 	type RegisterBody
 } from '$lib/api/auth';
 import { writable } from 'svelte/store';
+import { settings } from './settings';
 import { subjects } from './subjects';
 import { tasks } from './tasks';
 
@@ -107,6 +108,7 @@ function createAuthStore() {
 					isLoading: false,
 					error: null
 				});
+				settings.clear();
 
 				return;
 			}
@@ -131,6 +133,7 @@ function createAuthStore() {
 					isLoading: false,
 					error: null
 				});
+				settings.clear();
 			}
 		},
 
@@ -148,6 +151,7 @@ function createAuthStore() {
 
 			subjects.clear();
 			tasks.clear();
+			settings.clear();
 		}
 	};
 }

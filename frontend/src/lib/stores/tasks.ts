@@ -3,6 +3,7 @@ import { createTask, deleteTask, getAllTasks, getTasks, updateTask } from '$lib/
 import type { Task, TaskPriority, TaskStatus } from '$lib/types';
 import { derived, writable } from 'svelte/store';
 import { settings } from './settings';
+import { getErrorMessage } from './store-utils';
 
 type UpdateTaskData = {
 	title?: string;
@@ -67,11 +68,7 @@ function createTaskStore() {
 			} catch (err) {
 				if (session !== sessionVersion || version !== loadAllVersion) return;
 
-				if (!(err instanceof Error)) {
-					fetchError.set('Something went wrong');
-					throw err;
-				}
-				fetchError.set(err.message);
+				fetchError.set(getErrorMessage(err));
 				throw err;
 			} finally {
 				if (session === sessionVersion && version === loadAllVersion) {
@@ -100,11 +97,7 @@ function createTaskStore() {
 			} catch (err) {
 				if (session !== sessionVersion || version !== loadVersion) return;
 
-				if (!(err instanceof Error)) {
-					error.set('Something went wrong');
-					throw err;
-				}
-				error.set(err.message);
+				error.set(getErrorMessage(err));
 				throw err;
 			} finally {
 				if (session === sessionVersion && version === loadVersion) {
@@ -140,11 +133,7 @@ function createTaskStore() {
 			} catch (err) {
 				if (!isCurrentSession(session)) return;
 
-				if (!(err instanceof Error)) {
-					error.set('Something went wrong');
-					throw err;
-				}
-				error.set(err.message);
+				error.set(getErrorMessage(err));
 				throw err;
 			} finally {
 				if (isCurrentSession(session)) {
@@ -173,11 +162,7 @@ function createTaskStore() {
 			} catch (err) {
 				if (!isCurrentSession(session)) return;
 
-				if (!(err instanceof Error)) {
-					error.set('Something went wrong');
-					throw err;
-				}
-				error.set(err.message);
+				error.set(getErrorMessage(err));
 				throw err;
 			} finally {
 				if (isCurrentSession(session)) {
@@ -217,11 +202,7 @@ function createTaskStore() {
 			} catch (err) {
 				if (!isCurrentSession(session)) return;
 
-				if (!(err instanceof Error)) {
-					error.set('Something went wrong');
-					throw err;
-				}
-				error.set(err.message);
+				error.set(getErrorMessage(err));
 				throw err;
 			} finally {
 				if (isCurrentSession(session)) {
@@ -265,11 +246,7 @@ function createTaskStore() {
 					});
 				}
 
-				if (!(err instanceof Error)) {
-					error.set('Something went wrong');
-					throw err;
-				}
-				error.set(err.message);
+				error.set(getErrorMessage(err));
 				throw err;
 			} finally {
 				if (isCurrentSession(session)) {

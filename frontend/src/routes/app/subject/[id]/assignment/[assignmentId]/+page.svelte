@@ -41,7 +41,9 @@
 
 		try {
 			await tasks.setStatus($auth.token, task.id, task.status === 'done' ? 'in_progress' : 'done');
-		} catch (error) {}
+		} catch {
+			return;
+		}
 	}
 
 	async function handleDelete() {
@@ -52,7 +54,9 @@
 		try {
 			await tasks.remove($auth.token, task.id);
 			await goto(resolve(`/app/subject/${subjectId}`));
-		} catch (error) {}
+		} catch {
+			return;
+		}
 	}
 
 	function toggleDeleteModal() {
@@ -178,7 +182,7 @@
 		description={t('tasks.detail.notFound.description')}
 		confirmText={t('tasks.detail.backToSubject')}
 		onConfirm={() => {
-			goto(`/app/subject/${subjectId}`);
+			goto(resolve(`/app/subject/${subjectId}`));
 		}}
 	/>
 {/if}
