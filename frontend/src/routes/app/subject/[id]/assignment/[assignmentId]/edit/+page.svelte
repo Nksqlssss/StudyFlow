@@ -88,9 +88,7 @@
 		try {
 			await tasks.update($auth.token, assignmentId, updateTaskBody);
 			await goto(resolve(`/app/subject/${subjectId}/assignment/${assignmentId}`));
-		} catch {
-			return;
-		}
+		} catch (error) {}
 	}
 
 	$effect(() => {
@@ -280,7 +278,7 @@
 		description={t('tasks.detail.notFound.description')}
 		confirmText={t('tasks.detail.backToSubject')}
 		onConfirm={() => {
-			goto(resolve(`/app/subject/${subjectId}`));
+			goto(`/app/subject/${subjectId}`);
 		}}
 	/>
 {/if}

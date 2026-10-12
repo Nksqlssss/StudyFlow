@@ -1,7 +1,7 @@
-import type { AuthUser } from './auth.js';
+import type { AuthUser } from './auth.js'
 
 declare module 'fastify' {
-	interface FastifyRequest {
-		user: AuthUser;
-	}
+  interface FastifyRequest {
+    user: AuthUser;
+  }
 }

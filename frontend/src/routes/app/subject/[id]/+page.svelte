@@ -72,9 +72,7 @@
 			}
 			showConfirmModal = false;
 			pendingTaskId = null;
-		} catch {
-			return;
-		}
+		} catch (error) {}
 	}
 
 	function handleCancel() {

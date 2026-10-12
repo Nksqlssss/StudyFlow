@@ -18,7 +18,7 @@
 		});
 
 		if (!$auth.error) {
-			goto(resolve('/app'));
+			goto('/app');
 		}
 	}
 </script>
@@ -33,7 +33,9 @@
 		<div class="auth-copy">
 			<p class="eyebrow">Регистрация</p>
 			<h1>Собери своё учебное пространство</h1>
-			<p>Создай аккаунт, чтобы хранить предметы, задания и прогресс в одном удобном месте.</p>
+			<p>
+				Создай аккаунт, чтобы хранить предметы, задания и прогресс в одном удобном месте.
+			</p>
 			<div class="auth-highlights">
 				<span>Предметы</span>
 				<span>Задания</span>
@@ -49,16 +51,22 @@
 
 			<label>
 				<span>Имя</span>
-				<input type="text" name="name" placeholder="Имя" autocomplete="name" bind:value={name} />
+				<input 
+					type="text" 
+					name="name" 
+					placeholder="Имя" 
+					autocomplete="name" 
+					bind:value={name}
+				/>
 			</label>
 
 			<label>
 				<span>Email</span>
-				<input
-					type="email"
-					name="email"
-					placeholder="you@example.com"
-					autocomplete="email"
+				<input 
+					type="email" 
+					name="email" 
+					placeholder="you@example.com" 
+					autocomplete="email" 
 					bind:value={email}
 				/>
 			</label>

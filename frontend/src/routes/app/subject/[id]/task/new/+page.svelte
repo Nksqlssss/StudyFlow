@@ -52,9 +52,7 @@
 		try {
 			await tasks.add($auth.token, subjectId, taskBody);
 			await goto(resolve(`/app/subject/${subjectId}`));
-		} catch {
-			return;
-		}
+		} catch (error) {}
 	}
 </script>
 
