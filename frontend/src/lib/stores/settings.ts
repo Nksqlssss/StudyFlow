@@ -1,5 +1,3 @@
-import type { AppSettings } from '$lib/types';
-import { get, writable } from 'svelte/store';
 import {
 	defaultAppSettings,
 	getSettings,
@@ -7,122 +5,141 @@ import {
 	updateSettings,
 	type UpdateSettingData
 } from '$lib/api/settings';
-import { createAsyncGate, getErrorMessage } from './store-utils';
+import type { AppSettings } from '$lib/types';
+import { get, writable } from 'svelte/store';
 
-const isLoading = writable<boolean>(false);
-const error = writable<string | null>(null);
+const isLoading = writable(false);
 const isLoaded = writable(false);
+const error = writable<string | null>(null);
+
+function getErrorMessage(error: unknown, fallback: string) {
+	return error instanceof Error ? error.message : fallback;
+}
 
 function createSettingsStore() {
 	const { subscribe, set } = writable<AppSettings>(defaultAppSettings);
 	let currentToken: string | null = null;
-	const gate = createAsyncGate();
-
-	function setError(err: unknown, fallback = 'Something went wrong') {
-		error.set(getErrorMessage(err, fallback));
-	}
+	let requestVersion = 0;
+	let isSaving = false;
+	let currentSavingVersion: number | null = null;
 
 	async function load(token: string) {
 		currentToken = token;
-		const request = gate.nextLoad();
+		const version = ++requestVersion;
 
 		isLoading.set(true);
+		isLoaded.set(false);
 		error.set(null);
 
 		try {
 			const response = await getSettings(token);
 
-			if (!gate.isCurrentLoad(request)) return;
+			if (version !== requestVersion || token !== currentToken) return;
 
 			set(response.settings);
+			isLoaded.set(true);
 		} catch (err) {
-			if (!gate.isCurrentLoad(request)) return;
+			if (version !== requestVersion || token !== currentToken) return;
 
-			setError(err);
+			error.set(getErrorMessage(err, 'Failed to load settings'));
+			isLoaded.set(false);
 			throw err;
 		} finally {
-			if (gate.isCurrentLoad(request)) {
-				isLoaded.set(true);
+			if (version === requestVersion && token === currentToken) {
 				isLoading.set(false);
 			}
 		}
 	}
 
-	function update(data: UpdateSettingData) {
-		gate.invalidateLoads();
+	async function update(data: UpdateSettingData) {
+		if (isSaving) return;
+
 		const token = currentToken;
-		const request = gate.nextMutation();
+
+		if (!token) {
+			error.set('You must be logged in to update settings');
+			return;
+		}
+
+		const version = ++requestVersion;
+		currentSavingVersion = version;
 		const previousSettings = get({ subscribe });
-		const nextSettings = {
+
+		set({
 			...previousSettings,
 			...data
-		};
-
-		set(nextSettings);
+		});
 		isLoaded.set(true);
+		isLoading.set(true);
 		error.set(null);
 
-		if (!token) return;
+		try {
+			isSaving = true;
+			const response = await updateSettings(token, data);
 
-		isLoading.set(true);
+			if (version !== requestVersion || token !== currentToken) return;
 
-		void (async () => {
-			try {
-				const response = await updateSettings(token, data);
+			set(response.settings);
+		} catch (err) {
+			if (version !== requestVersion || token !== currentToken) return;
 
-				if (!gate.isCurrentMutation(request)) return;
-
-				set(response.settings);
-			} catch (err) {
-				if (!gate.isCurrentMutation(request)) return;
-
-				set(previousSettings);
-				setError(err);
-			} finally {
-				if (gate.isCurrentMutation(request)) {
-					isLoading.set(false);
-				}
+			set(previousSettings);
+			error.set(getErrorMessage(err, 'Failed to update settings'));
+		} finally {
+			if (version === requestVersion && token === currentToken) isLoading.set(false);
+			if (currentSavingVersion === version) {
+				isSaving = false;
+				currentSavingVersion = null;
 			}
-		})();
+		}
 	}
 
-	function reset() {
-		gate.invalidateLoads();
+	async function reset() {
+		if (isSaving) return;
+
 		const token = currentToken;
-		const request = gate.nextMutation();
+
+		if (!token) {
+			error.set('You must be logged in to reset settings');
+			return;
+		}
+
+		const version = ++requestVersion;
+		currentSavingVersion = version;
 		const previousSettings = get({ subscribe });
 
 		set(defaultAppSettings);
 		isLoaded.set(true);
+		isLoading.set(true);
 		error.set(null);
 
-		if (!token) return;
+		try {
+			isSaving = true;
+			const response = await resetSettings(token);
 
-		isLoading.set(true);
+			if (version !== requestVersion || token !== currentToken) return;
 
-		void (async () => {
-			try {
-				const response = await resetSettings(token);
+			set(response.settings);
+		} catch (err) {
+			if (version !== requestVersion || token !== currentToken) return;
 
-				if (!gate.isCurrentMutation(request)) return;
-
-				set(response.settings);
-			} catch (err) {
-				if (!gate.isCurrentMutation(request)) return;
-
-				set(previousSettings);
-				setError(err);
-			} finally {
-				if (gate.isCurrentMutation(request)) {
-					isLoading.set(false);
-				}
+			set(previousSettings);
+			error.set(getErrorMessage(err, 'Failed to reset settings'));
+			throw err;
+		} finally {
+			if (version === requestVersion && token === currentToken) isLoading.set(false);
+			if (currentSavingVersion === version) {
+				isSaving = false;
+				currentSavingVersion = null;
 			}
-		})();
+		}
 	}
 
 	function clear() {
-		gate.reset();
+		requestVersion++;
 		currentToken = null;
+		isSaving = false;
+		currentSavingVersion = null;
 
 		set(defaultAppSettings);
 		isLoaded.set(false);

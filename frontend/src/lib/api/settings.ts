@@ -11,7 +11,7 @@ export const defaultAppSettings: AppSettings = {
 	theme: 'dark',
 	cardDensity: 'comfortable',
 	showTips: true,
-	language: 'ru',
+	language: 'en',
 	defaultTaskPriority: 'medium',
 	urgentThresholdHours: 24,
 	completedTasksVisibility: 'tab_only'
