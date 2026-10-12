@@ -14,6 +14,7 @@ export const translations = {
 		'common.version': 'Версия',
 		'common.inDevelopment': 'На стадии разработки',
 		'common.comingInV2': 'Будет добавлено в StudyFlow v2.0.0',
+		'common.somethingWentWrong': 'Что-то пошло не так',
 
 		'nav.subjects': 'Предметы',
 		'nav.schedule': 'Расписание',
@@ -157,6 +158,8 @@ export const translations = {
 		'settings.data.importPdf': 'Импорт PDF',
 		'settings.data.clearTasks': 'Очистить задания',
 		'settings.data.clearAll': 'Очистить всё',
+		'settings.data.resetSettings': 'Сбросить настройки',
+		'settings.account.logout': 'Выйти из аккаунта',
 		'settings.about.title': 'О приложении',
 		'settings.about.storage': 'Хранение данных',
 		'settings.about.local': 'Локально в браузере',
@@ -166,6 +169,9 @@ export const translations = {
 		'settings.clearTasks.description': 'Предметы останутся, но задания будут удалены.',
 		'settings.clearAll.title': 'Очистить все данные?',
 		'settings.clearAll.description': 'Будут удалены предметы, задания и настройки.',
+		'settings.resetSettings.title': 'Сбросить настройки?',
+		'settings.logout.title': 'Выйти из аккаунта?',
+		'settings.logout.description': 'Вы сможете войти обратно в любое время.',
 		'settings.hours': '{count} ч'
 	},
 	en: {
@@ -183,6 +189,7 @@ export const translations = {
 		'common.version': 'Version',
 		'common.inDevelopment': 'In development',
 		'common.comingInV2': 'Coming in StudyFlow v2.0.0',
+		'common.somethingWentWrong': 'Something went wrong',
 
 		'nav.subjects': 'Subjects',
 		'nav.schedule': 'Schedule',
@@ -325,6 +332,8 @@ export const translations = {
 		'settings.data.importPdf': 'Import PDF',
 		'settings.data.clearTasks': 'Clear tasks',
 		'settings.data.clearAll': 'Clear all',
+		'settings.data.resetSettings': 'Reset settings',
+		'settings.account.logout': 'Log out',
 		'settings.about.title': 'About',
 		'settings.about.storage': 'Data storage',
 		'settings.about.local': 'Local in browser',
@@ -334,6 +343,9 @@ export const translations = {
 		'settings.clearTasks.description': 'Subjects will remain, but tasks will be deleted.',
 		'settings.clearAll.title': 'Clear all data?',
 		'settings.clearAll.description': 'Subjects, tasks, and settings will be deleted.',
+		'settings.resetSettings.title': 'Reset settings?',
+		'settings.logout.title': 'Log out?',
+		'settings.logout.description': 'You can sign back in at any time.',
 		'settings.hours': '{count} h'
 	},
 	pl: {
@@ -351,6 +363,7 @@ export const translations = {
 		'common.version': 'Wersja',
 		'common.inDevelopment': 'W trakcie prac',
 		'common.comingInV2': 'Pojawi się w StudyFlow v2.0.0',
+		'common.somethingWentWrong': 'Coś poszło nie tak',
 
 		'nav.subjects': 'Przedmioty',
 		'nav.schedule': 'Plan',
@@ -492,6 +505,8 @@ export const translations = {
 		'settings.data.importPdf': 'Import PDF',
 		'settings.data.clearTasks': 'Wyczyść zadania',
 		'settings.data.clearAll': 'Wyczyść wszystko',
+		'settings.data.resetSettings': 'Resetuj ustawienia',
+		'settings.account.logout': 'Wyloguj się',
 		'settings.about.title': 'O aplikacji',
 		'settings.about.storage': 'Przechowywanie danych',
 		'settings.about.local': 'Lokalnie w przeglądarce',
@@ -501,6 +516,9 @@ export const translations = {
 		'settings.clearTasks.description': 'Przedmioty zostaną, ale zadania zostaną usunięte.',
 		'settings.clearAll.title': 'Wyczyścić wszystkie dane?',
 		'settings.clearAll.description': 'Przedmioty, zadania i ustawienia zostaną usunięte.',
+		'settings.resetSettings.title': 'Zresetować ustawienia?',
+		'settings.logout.title': 'Wylogować się?',
+		'settings.logout.description': 'Możesz zalogować się ponownie w dowolnym momencie.',
 		'settings.hours': '{count} godz.'
 	}
 } as const;

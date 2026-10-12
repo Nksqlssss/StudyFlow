@@ -1,15 +1,21 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { priorityLabel, translate, type TranslationKey } from '$lib/i18n';
-	import { settings } from '$lib/stores/settings';
+	import { auth } from '$lib/stores/auth';
+	import { settings, settingsError, settingsLoaded, settingsLoading } from '$lib/stores/settings';
 	import { subjects } from '$lib/stores/subjects';
 	import { tasks } from '$lib/stores/tasks';
 	import type { TaskPriority } from '$lib/types';
 
 	let showClearAllModal = $state(false);
 	let showClearTasksModal = $state(false);
+	let showResetSettingsModal = $state(false);
+	let showLogoutModalOpen = $state(false);
 	let showModal = $state(false);
+	let actionLoading = $state(false);
+	let actionError: string | null = $state(null);
 	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
 		translate($settings.language, key, params)
 	);
@@ -20,16 +26,71 @@
 		showModal = !showModal;
 	}
 
-	function handleClearAll() {
-		subjects.clear();
-		tasks.clear();
-		settings.reset();
-		showClearAllModal = false;
+	async function handleResetSettings() {
+		if (actionLoading) return;
+		actionError = null;
+		try {
+			actionLoading = true;
+
+			await settings.reset();
+			showResetSettingsModal = false;
+		} catch (error) {
+			if (!(error instanceof Error)) {
+				actionError = t('common.somethingWentWrong');
+				return;
+			}
+			actionError = error.message;
+		} finally {
+			actionLoading = false;
+		}
 	}
 
-	function handleClearTasks() {
-		showClearTasksModal = false;
-		tasks.clear();
+	async function handleClearAll() {
+		if (!$auth.token) return;
+		if (actionLoading) return;
+		actionError = null;
+
+		try {
+			actionLoading = true;
+
+			await tasks.deleteAllTasks($auth.token);
+			await subjects.deleteAllSubjects($auth.token);
+			await settings.reset();
+			showClearAllModal = false;
+		} catch (error) {
+			if (!(error instanceof Error)) {
+				actionError = t('common.somethingWentWrong');
+				return;
+			}
+			actionError = error.message;
+		} finally {
+			actionLoading = false;
+		}
+	}
+
+	async function handleClearTasks() {
+		if (!$auth.token) return;
+		if (actionLoading) return;
+		actionError = null;
+
+		try {
+			actionLoading = true;
+			await tasks.deleteAllTasks($auth.token);
+			showClearTasksModal = false;
+		} catch (error) {
+			if (!(error instanceof Error)) {
+				actionError = t('common.somethingWentWrong');
+				return;
+			}
+			actionError = error.message;
+		} finally {
+			actionLoading = false;
+		}
+	}
+
+	function handleLogout() {
+		auth.logout();
+		goto('/');
 	}
 </script>
 
@@ -44,6 +105,9 @@
 		</p>
 	</header>
 
+	{#if $settingsError}
+		<p class="error-text">{$settingsError}</p>
+	{/if}
 	<section class="settings-section">
 		<div class="section-heading">
 			<h2>{t('settings.appearance.title')}</h2>
@@ -61,6 +125,7 @@
 					type="button"
 					class:selected={$settings.theme === 'dark'}
 					onclick={() => settings.update({ theme: 'dark' })}
+					disabled={$settingsLoading || !$settingsLoaded}
 				>
 					{t('settings.theme.dark')}
 				</button>
@@ -68,6 +133,7 @@
 					type="button"
 					class:selected={$settings.theme === 'light'}
 					onclick={() => settings.update({ theme: 'light' })}
+					disabled={$settingsLoading || !$settingsLoaded}
 				>
 					{t('settings.theme.light')}
 				</button>
@@ -85,6 +151,7 @@
 					type="button"
 					class:selected={$settings.cardDensity === 'comfortable'}
 					onclick={() => settings.update({ cardDensity: 'comfortable' })}
+					disabled={$settingsLoading || !$settingsLoaded}
 				>
 					{t('settings.density.comfortable')}
 				</button>
@@ -92,6 +159,7 @@
 					type="button"
 					class:selected={$settings.cardDensity === 'compact'}
 					onclick={() => settings.update({ cardDensity: 'compact' })}
+					disabled={$settingsLoading || !$settingsLoaded}
 				>
 					{t('settings.density.compact')}
 				</button>
@@ -111,6 +179,7 @@
 					settings.update({
 						showTips: (event.currentTarget as HTMLInputElement).checked
 					})}
+				disabled={$settingsLoading || !$settingsLoaded}
 			/>
 			<span class="switch"></span>
 		</label>
@@ -126,6 +195,7 @@
 				type="button"
 				class:selected={$settings.language === 'ru'}
 				onclick={() => settings.update({ language: 'ru' })}
+				disabled={$settingsLoading || !$settingsLoaded}
 			>
 				<span>{t('settings.language.ru')}</span>
 				<small>RU</small>
@@ -134,6 +204,7 @@
 				type="button"
 				class:selected={$settings.language === 'en'}
 				onclick={() => settings.update({ language: 'en' })}
+				disabled={$settingsLoading || !$settingsLoaded}
 			>
 				<span>{t('settings.language.en')}</span>
 				<small>EN</small>
@@ -142,6 +213,7 @@
 				type="button"
 				class:selected={$settings.language === 'pl'}
 				onclick={() => settings.update({ language: 'pl' })}
+				disabled={$settingsLoading || !$settingsLoaded}
 			>
 				<span>{t('settings.language.pl')}</span>
 				<small>PL</small>
@@ -167,6 +239,7 @@
 					settings.update({
 						defaultTaskPriority: (event.currentTarget as HTMLSelectElement).value as TaskPriority
 					})}
+				disabled={$settingsLoading || !$settingsLoaded}
 			>
 				{#each priorities as priority (priority)}
 					<option value={priority}>{priorityLabel($settings.language, priority)}</option>
@@ -185,6 +258,7 @@
 					type="button"
 					class:selected={$settings.urgentThresholdHours === 24}
 					onclick={() => settings.update({ urgentThresholdHours: 24 })}
+					disabled={$settingsLoading || !$settingsLoaded}
 				>
 					{t('settings.hours', { count: 24 })}
 				</button>
@@ -192,6 +266,7 @@
 					type="button"
 					class:selected={$settings.urgentThresholdHours === 48}
 					onclick={() => settings.update({ urgentThresholdHours: 48 })}
+					disabled={$settingsLoading || !$settingsLoaded}
 				>
 					{t('settings.hours', { count: 48 })}
 				</button>
@@ -199,6 +274,7 @@
 					type="button"
 					class:selected={$settings.urgentThresholdHours === 72}
 					onclick={() => settings.update({ urgentThresholdHours: 72 })}
+					disabled={$settingsLoading || !$settingsLoaded}
 				>
 					{t('settings.hours', { count: 72 })}
 				</button>
@@ -219,6 +295,7 @@
 							| 'tab_only'
 							| 'active_list'
 					})}
+				disabled={$settingsLoading || !$settingsLoaded}
 			>
 				<option value="tab_only">{t('settings.completed.tabOnly')}</option>
 				<option value="active_list">{t('settings.completed.activeList')}</option>
@@ -239,11 +316,38 @@
 			<button type="button" class="secondary-action" onclick={modalToggle}
 				>{t('settings.data.importPdf')}</button
 			>
-			<button type="button" class="danger-action" onclick={() => (showClearTasksModal = true)}>
+			<button
+				type="button"
+				class="danger-action"
+				onclick={() => {
+					showClearTasksModal = true;
+					actionError = null;
+				}}
+			>
 				{t('settings.data.clearTasks')}
 			</button>
-			<button type="button" class="danger-action" onclick={() => (showClearAllModal = true)}>
+			<button
+				type="button"
+				class="danger-action"
+				onclick={() => {
+					showClearAllModal = true;
+					actionError = null;
+				}}
+			>
 				{t('settings.data.clearAll')}
+			</button>
+			<button
+				type="button"
+				class="danger-action"
+				onclick={() => {
+					showResetSettingsModal = true;
+					actionError = null;
+				}}
+			>
+				{t('settings.data.resetSettings')}
+			</button>
+			<button type="button" class="danger-action" onclick={() => (showLogoutModalOpen = true)}>
+				{t('settings.account.logout')}
 			</button>
 		</div>
 	</section>
@@ -258,13 +362,6 @@
 				<span>{t('common.version')}</span>
 				<strong>v1.0.0</strong>
 			</div>
-			<div>
-				<span>{t('settings.about.storage')}</span>
-				<strong>{t('settings.about.local')}</strong>
-			</div>
-			<p>
-				{t('settings.about.description')}
-			</p>
 		</div>
 	</section>
 </main>
@@ -278,6 +375,7 @@
 		variant="danger"
 		onConfirm={handleClearTasks}
 		onCancel={() => (showClearTasksModal = false)}
+		error={actionError}
 	/>
 {/if}
 
@@ -290,6 +388,32 @@
 		variant="danger"
 		onConfirm={handleClearAll}
 		onCancel={() => (showClearAllModal = false)}
+		error={actionError}
+	/>
+{/if}
+
+{#if showResetSettingsModal}
+	<ConfirmModal
+		title={t('settings.resetSettings.title')}
+		description={t('common.deleteIrreversible')}
+		confirmText={t('common.reset')}
+		cancelText={t('common.cancel')}
+		variant="danger"
+		onConfirm={handleResetSettings}
+		onCancel={() => (showResetSettingsModal = false)}
+		error={actionError}
+	/>
+{/if}
+
+{#if showLogoutModalOpen}
+	<ConfirmModal
+		title={t('settings.logout.title')}
+		description={t('settings.logout.description')}
+		confirmText={t('settings.account.logout')}
+		cancelText={t('common.cancel')}
+		variant="danger"
+		onConfirm={handleLogout}
+		onCancel={() => (showLogoutModalOpen = false)}
 	/>
 {/if}
 
@@ -330,8 +454,7 @@
 
 	.header-description,
 	.section-heading p,
-	.setting-row p,
-	.about-list p {
+	.setting-row p {
 		color: var(--text-secondary);
 		font-size: 14px;
 		line-height: 1.5;
@@ -345,6 +468,18 @@
 		border: 1px solid var(--border-primary);
 		border-radius: 20px;
 		background-color: var(--surface-primary);
+	}
+
+	.error-text {
+		margin-bottom: 16px;
+		padding: 12px 14px;
+		border: 1px solid var(--state-danger-soft-border);
+		border-radius: 14px;
+		background-color: var(--state-danger-soft-bg);
+		color: var(--state-danger-soft-text);
+		font-size: 14px;
+		font-weight: 700;
+		line-height: 1.4;
 	}
 
 	.section-heading h2 {
@@ -390,6 +525,12 @@
 		cursor: pointer;
 	}
 
+	button:disabled,
+	select:disabled {
+		cursor: not-allowed;
+		opacity: 0.55;
+	}
+
 	select {
 		width: 100%;
 		padding: 0 14px;
@@ -406,6 +547,11 @@
 		grid-template-columns: 1fr auto;
 		align-items: center;
 		cursor: pointer;
+	}
+
+	.switch-row:has(input:disabled) {
+		cursor: not-allowed;
+		opacity: 0.65;
 	}
 
 	.switch-row input {

@@ -82,3 +82,10 @@ export function deleteTask(token: string, id: string) {
 		token
 	});
 }
+
+export function deleteTasks(token: string) {
+	return apiFetch<void>('/tasks', {
+		method: 'DELETE',
+		token
+	});
+}

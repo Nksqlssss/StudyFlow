@@ -1,9 +1,15 @@
 import type { ApiTask } from '$lib/api/tasks';
-import { createTask, deleteTask, getAllTasks, getTasks, updateTask } from '$lib/api/tasks';
+import {
+	createTask,
+	deleteTask,
+	deleteTasks,
+	getAllTasks,
+	getTasks,
+	updateTask
+} from '$lib/api/tasks';
 import type { Task, TaskPriority, TaskStatus } from '$lib/types';
 import { derived, writable } from 'svelte/store';
 import { settings } from './settings';
-import { getErrorMessage } from './store-utils';
 
 type UpdateTaskData = {
 	title?: string;
@@ -68,7 +74,11 @@ function createTaskStore() {
 			} catch (err) {
 				if (session !== sessionVersion || version !== loadAllVersion) return;
 
-				fetchError.set(getErrorMessage(err));
+				if (!(err instanceof Error)) {
+					fetchError.set('Something went wrong');
+					throw err;
+				}
+				fetchError.set(err.message);
 				throw err;
 			} finally {
 				if (session === sessionVersion && version === loadAllVersion) {
@@ -97,7 +107,11 @@ function createTaskStore() {
 			} catch (err) {
 				if (session !== sessionVersion || version !== loadVersion) return;
 
-				error.set(getErrorMessage(err));
+				if (!(err instanceof Error)) {
+					error.set('Something went wrong');
+					throw err;
+				}
+				error.set(err.message);
 				throw err;
 			} finally {
 				if (session === sessionVersion && version === loadVersion) {
@@ -133,7 +147,11 @@ function createTaskStore() {
 			} catch (err) {
 				if (!isCurrentSession(session)) return;
 
-				error.set(getErrorMessage(err));
+				if (!(err instanceof Error)) {
+					error.set('Something went wrong');
+					throw err;
+				}
+				error.set(err.message);
 				throw err;
 			} finally {
 				if (isCurrentSession(session)) {
@@ -162,7 +180,11 @@ function createTaskStore() {
 			} catch (err) {
 				if (!isCurrentSession(session)) return;
 
-				error.set(getErrorMessage(err));
+				if (!(err instanceof Error)) {
+					error.set('Something went wrong');
+					throw err;
+				}
+				error.set(err.message);
 				throw err;
 			} finally {
 				if (isCurrentSession(session)) {
@@ -202,7 +224,11 @@ function createTaskStore() {
 			} catch (err) {
 				if (!isCurrentSession(session)) return;
 
-				error.set(getErrorMessage(err));
+				if (!(err instanceof Error)) {
+					error.set('Something went wrong');
+					throw err;
+				}
+				error.set(err.message);
 				throw err;
 			} finally {
 				if (isCurrentSession(session)) {
@@ -246,7 +272,11 @@ function createTaskStore() {
 					});
 				}
 
-				error.set(getErrorMessage(err));
+				if (!(err instanceof Error)) {
+					error.set('Something went wrong');
+					throw err;
+				}
+				error.set(err.message);
 				throw err;
 			} finally {
 				if (isCurrentSession(session)) {
@@ -257,6 +287,27 @@ function createTaskStore() {
 
 		removeBySubject(subjectId: string) {
 			updateStore((tasks) => tasks.filter((t) => t.subjectId !== subjectId));
+		},
+
+		async deleteAllTasks(token: string) {
+			isLoading.set(true);
+			error.set(null);
+
+			try {
+				await deleteTasks(token);
+				set([]);
+				hasLoaded.set(true);
+			} catch (err) {
+				if (!(err instanceof Error)) {
+					error.set('Something went wrong');
+					throw err;
+				}
+				error.set(err.message);
+				hasLoaded.set(true);
+				throw err;
+			} finally {
+				isLoading.set(false);
+			}
 		},
 
 		clear() {

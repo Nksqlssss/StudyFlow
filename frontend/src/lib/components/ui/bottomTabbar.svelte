@@ -1,29 +1,16 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { translate, type TranslationKey } from '$lib/i18n';
-	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
-	import ConfirmModal from './ConfirmModal.svelte';
 
 	const t = $derived((key: TranslationKey) => translate($settings.language, key));
 	const pathname = $derived($page.url.pathname);
-	let isModalOpen = $state(false);
 
 	const isSubjectsActive = $derived(pathname === '/app' || pathname.startsWith('/app/subject'));
 	const isRouteActive = $derived(
 		(route: string) => pathname === route || pathname.startsWith(`${route}/`)
 	);
-
-	function toggleModal() {
-		isModalOpen = !isModalOpen;
-	}
-
-	function handleLogout() {
-		auth.logout();
-		goto(resolve('/'));
-	}
 </script>
 
 <div class="bottom-tabbar">
@@ -71,23 +58,7 @@
 			{t('nav.settings')}
 		</p>
 	</a>
-	<button class="logout-button bottom-tabbar-button" type="button" onclick={toggleModal}>
-		<span class="logout-icon">⏻</span>
-		<p>Выйти</p>
-	</button>
 </div>
-
-{#if isModalOpen}
-	<ConfirmModal
-		title="Выйти из аккаунта?"
-		description="Вы можете зарегистрировать обратно в любое время"
-		confirmText="Выйти"
-		cancelText="Отмена"
-		variant="danger"
-		onConfirm={handleLogout}
-		onCancel={toggleModal}
-	/>
-{/if}
 
 <style>
 	.bottom-tabbar {
@@ -141,16 +112,6 @@
 
 	.is-current {
 		background-color: var(--accent-primary-bg);
-	}
-
-	.logout-button {
-		cursor: pointer;
-		color: var(--state-danger-soft-text);
-	}
-
-	.logout-icon {
-		font-size: 20px;
-		line-height: 20px;
 	}
 
 	@media (min-width: 768px) {

@@ -1,7 +1,7 @@
-import type { FastifyInstance } from 'fastify';
-import { z } from 'zod';
-import { prisma } from '../lib/prisma.js';
-import { authenticate } from '../middleware/authenticate.js';
+import type { FastifyInstance } from 'fastify'
+import { z } from 'zod'
+import { prisma } from '../lib/prisma.js'
+import { authenticate } from '../middleware/authenticate.js'
 
 const createTaskSchema = z.object({
 	title: z.string().trim().min(1).max(80),
@@ -9,7 +9,7 @@ const createTaskSchema = z.object({
 	deadline: z.string().datetime().optional(),
 	status: z.enum(['todo', 'in_progress', 'done']).optional(),
 	priority: z.enum(['low', 'medium', 'high']).optional()
-});
+})
 
 const updateTaskSchema = z.object({
 	title: z.string().trim().min(1).max(80).optional(),
@@ -17,7 +17,7 @@ const updateTaskSchema = z.object({
 	deadline: z.string().datetime().nullable().optional(),
 	status: z.enum(['todo', 'in_progress', 'done']).optional(),
 	priority: z.enum(['low', 'medium', 'high']).optional()
-});
+})
 
 export async function tasksRoutes(app: FastifyInstance) {
 	app.post(
@@ -28,22 +28,22 @@ export async function tasksRoutes(app: FastifyInstance) {
 		async (request, reply) => {
 			const paramsSchema = z.object({
 				subjectId: z.string().uuid()
-			});
+			})
 
-			const params = paramsSchema.safeParse(request.params);
+			const params = paramsSchema.safeParse(request.params)
 
 			if (!params.success) {
 				return reply.status(400).send({
 					message: 'Invalid subject id'
-				});
+				})
 			}
 
-			const body = createTaskSchema.safeParse(request.body);
+			const body = createTaskSchema.safeParse(request.body)
 
 			if (!body.success) {
 				return reply.status(400).send({
 					message: 'Invalid request body'
-				});
+				})
 			}
 
 			const subject = await prisma.subject.findFirst({
@@ -51,31 +51,33 @@ export async function tasksRoutes(app: FastifyInstance) {
 					id: params.data.subjectId,
 					userId: request.user.id
 				}
-			});
+			})
 
 			if (!subject) {
 				return reply.status(404).send({
 					message: 'Subject not found'
-				});
+				})
 			}
 
 			const task = await prisma.task.create({
 				data: {
 					title: body.data.title,
 					description: body.data.description,
-					deadline: body.data.deadline ? new Date(body.data.deadline) : undefined,
+					deadline: body.data.deadline
+						? new Date(body.data.deadline)
+						: undefined,
 					status: body.data.status,
 					priority: body.data.priority,
 					userId: request.user.id,
 					subjectId: subject.id
 				}
-			});
+			})
 
 			return reply.status(201).send({
 				task
-			});
+			})
 		}
-	);
+	)
 
 	app.get(
 		'/subjects/:subjectId/tasks',
@@ -85,26 +87,26 @@ export async function tasksRoutes(app: FastifyInstance) {
 		async (request, reply) => {
 			const paramsSchema = z.object({
 				subjectId: z.string().uuid()
-			});
+			})
 
-			const params = paramsSchema.safeParse(request.params);
+			const params = paramsSchema.safeParse(request.params)
 
 			if (!params.success) {
 				return reply.status(400).send({
 					message: 'Invalid subject id'
-				});
+				})
 			}
 			const subject = await prisma.subject.findFirst({
 				where: {
 					id: params.data.subjectId,
 					userId: request.user.id
 				}
-			});
+			})
 
 			if (!subject) {
 				return reply.status(404).send({
 					message: 'Subject not found'
-				});
+				})
 			}
 
 			const tasks = await prisma.task.findMany({
@@ -115,18 +117,18 @@ export async function tasksRoutes(app: FastifyInstance) {
 				orderBy: {
 					createdAt: 'desc'
 				}
-			});
+			})
 
-			return { tasks };
+			return { tasks }
 		}
-	);
+	)
 
 	app.get(
 		'/tasks',
 		{
 			preHandler: authenticate
 		},
-		async (request) => {
+		async request => {
 			const tasks = await prisma.task.findMany({
 				where: {
 					userId: request.user.id
@@ -134,11 +136,11 @@ export async function tasksRoutes(app: FastifyInstance) {
 				orderBy: {
 					createdAt: 'desc'
 				}
-			});
+			})
 
-			return { tasks };
+			return { tasks }
 		}
-	);
+	)
 
 	app.get(
 		'/tasks/:id',
@@ -148,14 +150,14 @@ export async function tasksRoutes(app: FastifyInstance) {
 		async (request, reply) => {
 			const paramsSchema = z.object({
 				id: z.string().uuid()
-			});
+			})
 
-			const params = paramsSchema.safeParse(request.params);
+			const params = paramsSchema.safeParse(request.params)
 
 			if (!params.success) {
 				return reply.status(400).send({
 					message: 'Invalid task id'
-				});
+				})
 			}
 
 			const task = await prisma.task.findFirst({
@@ -163,17 +165,17 @@ export async function tasksRoutes(app: FastifyInstance) {
 					id: params.data.id,
 					userId: request.user.id
 				}
-			});
+			})
 
 			if (!task) {
 				return reply.status(404).send({
 					message: 'Task not found'
-				});
+				})
 			}
 
-			return { task };
+			return { task }
 		}
-	);
+	)
 
 	app.patch(
 		'/tasks/:id',
@@ -183,22 +185,22 @@ export async function tasksRoutes(app: FastifyInstance) {
 		async (request, reply) => {
 			const paramsSchema = z.object({
 				id: z.string().uuid()
-			});
+			})
 
-			const params = paramsSchema.safeParse(request.params);
+			const params = paramsSchema.safeParse(request.params)
 
 			if (!params.success) {
 				return reply.status(400).send({
 					message: 'Invalid task id'
-				});
+				})
 			}
 
-			const body = updateTaskSchema.safeParse(request.body);
+			const body = updateTaskSchema.safeParse(request.body)
 
 			if (!body.success) {
 				return reply.status(400).send({
 					message: 'Invalid request body'
-				});
+				})
 			}
 
 			const task = await prisma.task.findFirst({
@@ -206,12 +208,12 @@ export async function tasksRoutes(app: FastifyInstance) {
 					id: params.data.id,
 					userId: request.user.id
 				}
-			});
+			})
 
 			if (!task) {
 				return reply.status(404).send({
 					message: 'Task not found'
-				});
+				})
 			}
 
 			const updatedTask = await prisma.task.update({
@@ -230,13 +232,13 @@ export async function tasksRoutes(app: FastifyInstance) {
 								? null
 								: new Date(body.data.deadline)
 				}
-			});
+			})
 
 			return {
 				task: updatedTask
-			};
+			}
 		}
-	);
+	)
 
 	app.delete(
 		'/tasks/:id',
@@ -246,14 +248,14 @@ export async function tasksRoutes(app: FastifyInstance) {
 		async (request, reply) => {
 			const paramsSchema = z.object({
 				id: z.string().uuid()
-			});
+			})
 
-			const params = paramsSchema.safeParse(request.params);
+			const params = paramsSchema.safeParse(request.params)
 
 			if (!params.success) {
 				return reply.status(400).send({
 					message: 'Invalid task id'
-				});
+				})
 			}
 
 			const task = await prisma.task.findFirst({
@@ -261,21 +263,37 @@ export async function tasksRoutes(app: FastifyInstance) {
 					id: params.data.id,
 					userId: request.user.id
 				}
-			});
+			})
 
 			if (!task) {
 				return reply.status(404).send({
 					message: 'Task not found'
-				});
+				})
 			}
 
 			await prisma.task.delete({
 				where: {
 					id: task.id
 				}
-			});
+			})
 
-			return reply.status(204).send();
+			return reply.status(204).send()
 		}
-	);
+	)
+
+	app.delete(
+		'/tasks',
+		{
+			preHandler: authenticate
+		},
+		async (request, reply) => {
+			await prisma.task.deleteMany({
+				where: {
+					userId: request.user.id
+				}
+			})
+
+			return reply.status(204).send()
+		}
+	)
 }

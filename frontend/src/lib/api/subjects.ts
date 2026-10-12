@@ -64,3 +64,10 @@ export function deleteSubject(id: string, token: string) {
 		token
 	});
 }
+
+export function deleteSubjects(token: string) {
+	return apiFetch<void>('/subjects', {
+		method: 'DELETE',
+		token
+	});
+}
