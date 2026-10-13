@@ -3,8 +3,11 @@ import { apiFetch } from './client'
 export type AuthUser = {
 	id: string;
 	email: string;
-	name: string | null;
+	name: string;
+	username: string | null;
 	avatarUrl: string | null;
+	birthDate: string | null;
+	isPublic: boolean;
 	createdAt: string;
 	updatedAt: string;
 };

@@ -51,8 +51,12 @@ model User {
   id           String   @id @default(uuid())
   email        String   @unique
   passwordHash String
-  name         String?
+
+  name         String
+  username     String?  @unique
   avatarUrl    String?
+  birthDate    DateTime?
+  isPublic     Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
