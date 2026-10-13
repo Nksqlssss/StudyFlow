@@ -1,8 +1,13 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { translate, type TranslationKey } from '$lib/i18n';
+	import { settings } from '$lib/stores/settings';
 	import { onMount } from 'svelte';
 
 	let isVisible = $state(false);
+	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
+		translate($settings.language, key, params)
+	);
 
 	onMount(() => {
 		const frame = requestAnimationFrame(() => {
@@ -15,20 +20,20 @@
 	const features = [
 		{
 			metric: '01',
-			title: 'Предметы под контролем',
-			description: 'Каждый предмет живёт отдельно: прогресс, задания, приоритеты и понятная картина нагрузки.'
+			title: 'landing.features.subjects.title',
+			description: 'landing.features.subjects.description'
 		},
 		{
 			metric: '02',
-			title: 'Задания без хаоса',
-			description: 'Активные, выполненные и срочные задачи разделены так, чтобы не искать важное глазами.'
+			title: 'landing.features.tasks.title',
+			description: 'landing.features.tasks.description'
 		},
 		{
 			metric: '03',
-			title: 'Всегда под рукой',
-			description: 'Открывай StudyFlow, когда нужно быстро понять, что делать дальше и на чём сфокусироваться.'
+			title: 'landing.features.focus.title',
+			description: 'landing.features.focus.description'
 		}
-	];
+	] as const;
 </script>
 
 <main class="landing-page" class:is-visible={isVisible}>
@@ -39,26 +44,25 @@
 				<span>StudyFlow</span>
 			</a>
 
-			<nav class="landing-nav" aria-label="Главная навигация">
-				<a href={resolve('/login')}>Войти</a>
-				<a href={resolve('/register')} class="nav-cta">Создать аккаунт</a>
+			<nav class="landing-nav" aria-label={t('landing.nav.label')}>
+				<a href={resolve('/login')}>{t('auth.login.action')}</a>
+				<a href={resolve('/register')} class="nav-cta">{t('auth.register.action')}</a>
 			</nav>
 		</header>
 
 		<div class="hero-content">
-			<p class="eyebrow">Учёба без хаоса</p>
-			<h1>Учёба наконец выглядит управляемой</h1>
+			<p class="eyebrow">{t('landing.hero.eyebrow')}</p>
+			<h1>{t('landing.hero.title')}</h1>
 			<p class="hero-description">
-				StudyFlow собирает предметы, задания, дедлайны и прогресс в спокойный рабочий стол,
-				который хочется открыть перед учёбой, а не закрыть через пять секунд.
+				{t('landing.hero.description')}
 			</p>
 			<div class="hero-actions">
-				<a href={resolve('/register')} class="primary-link">Начать бесплатно</a>
-				<a href={resolve('/login')} class="secondary-link">У меня уже есть аккаунт</a>
+				<a href={resolve('/register')} class="primary-link">{t('landing.hero.primary')}</a>
+				<a href={resolve('/login')} class="secondary-link">{t('landing.hero.secondary')}</a>
 			</div>
 			<div class="hero-meta">
-				<span>Предметы и задания в одном месте</span>
-				<span>Чистый интерфейс без лишнего шума</span>
+				<span>{t('landing.hero.metaSubjects')}</span>
+				<span>{t('landing.hero.metaInterface')}</span>
 			</div>
 		</div>
 
@@ -72,8 +76,8 @@
 
 				<div class="product-header">
 					<div>
-						<p>Сегодня</p>
-						<strong>4 предмета · 12 заданий</strong>
+						<p>{t('landing.preview.today')}</p>
+						<strong>{t('landing.preview.summary')}</strong>
 					</div>
 					<div class="score-pill">72%</div>
 				</div>
@@ -83,7 +87,7 @@
 						<div class="card-icon"><img src="/icons/code.svg" alt="" /></div>
 						<div>
 							<strong>Frontend</strong>
-							<span>Проект, формы, API</span>
+							<span>{t('landing.preview.frontend')}</span>
 						</div>
 						<div class="mini-progress"><span></span></div>
 					</div>
@@ -91,22 +95,22 @@
 					<div class="product-card">
 						<div class="card-icon"><img src="/icons/math.svg" alt="" /></div>
 						<div>
-							<strong>Алгебра</strong>
-							<span>2 задания до пятницы</span>
+							<strong>{t('landing.preview.algebra')}</strong>
+							<span>{t('landing.preview.algebraTasks')}</span>
 						</div>
 						<div class="mini-progress second"><span></span></div>
 					</div>
 
 					<div class="task-stack">
 						<div class="task-chip high-priority">
-							<span>High</span>
-							<strong>Подготовить auth flow</strong>
+							<span>{t('priority.high')}</span>
+							<strong>{t('landing.preview.authTask')}</strong>
 						</div>
 						<div class="task-chip">
-							<span>Medium</span>
-							<strong>Повторить Prisma relations</strong>
+							<span>{t('priority.medium')}</span>
+							<strong>{t('landing.preview.prismaTask')}</strong>
 						</div>
-						<div class="done-line">Выполненные задания</div>
+						<div class="done-line">{t('tasks.completedDivider')}</div>
 					</div>
 				</div>
 			</div>
@@ -118,18 +122,18 @@
 		</div>
 	</section>
 
-	<section class="features-section" aria-label="Возможности StudyFlow">
+	<section class="features-section" aria-label={t('landing.features.label')}>
 		<div class="section-heading">
-			<p class="eyebrow">Почему это удобно</p>
-			<h2>Не просто список дел, а учебный рабочий стол</h2>
+			<p class="eyebrow">{t('landing.features.eyebrow')}</p>
+			<h2>{t('landing.features.title')}</h2>
 		</div>
 
 		<div class="features-grid">
 			{#each features as feature}
 				<article class="feature-card">
 					<span>{feature.metric}</span>
-					<h3>{feature.title}</h3>
-					<p>{feature.description}</p>
+					<h3>{t(feature.title)}</h3>
+					<p>{t(feature.description)}</p>
 				</article>
 			{/each}
 		</div>

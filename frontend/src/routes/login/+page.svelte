@@ -1,10 +1,15 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { translate, type TranslationKey } from '$lib/i18n';
 	import { auth } from '$lib/stores/auth';
+	import { settings } from '$lib/stores/settings';
 
 	let email = $state('');
 	let password = $state('');
+	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
+		translate($settings.language, key, params)
+	);
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -28,26 +33,26 @@
 
 	<section class="auth-layout">
 		<div class="auth-copy">
-			<p class="eyebrow">Вход</p>
-			<h1>Продолжи с того места, где остановился</h1>
+			<p class="eyebrow">{t('auth.login.eyebrow')}</p>
+			<h1>{t('auth.login.title')}</h1>
 			<p>
-				Войди в аккаунт, чтобы вернуться к своим предметам, заданиям и учебному прогрессу.
+				{t('auth.login.description')}
 			</p>
 			<div class="auth-highlights">
-				<span>Предметы</span>
-				<span>Задания</span>
-				<span>Прогресс</span>
+				<span>{t('nav.subjects')}</span>
+				<span>{t('tasks.title')}</span>
+				<span>{t('subjects.detail.progress')}</span>
 			</div>
 		</div>
 
 		<form class="auth-form" onsubmit={handleSubmit}>
 			<div class="form-header">
-				<h2>Войти в аккаунт</h2>
-				<p>Используй email и пароль, чтобы открыть своё учебное пространство.</p>
+				<h2>{t('auth.login.formTitle')}</h2>
+				<p>{t('auth.login.formDescription')}</p>
 			</div>
 
 			<label>
-				<span>Email</span>
+				<span>{t('auth.form.email')}</span>
 				<input 
 					type="email"
 					name="email" 
@@ -58,18 +63,18 @@
 			</label>
 
 			<label>
-				<span>Пароль</span>
+				<span>{t('auth.form.password')}</span>
 				<input
 					type="password"
 					name="password"
-					placeholder="Минимум 8 символов"
+					placeholder={t('auth.form.passwordPlaceholder')}
 					autocomplete="current-password"
 					bind:value={password}
 				/>
 			</label>
 
 			<button type="submit" disabled={$auth.isLoading}>
-				{$auth.isLoading ? 'Входим...' : 'Войти'}
+				{$auth.isLoading ? t('auth.login.loading') : t('auth.login.action')}
 			</button>
 
 			{#if $auth.error}
@@ -77,8 +82,8 @@
 			{/if}
 
 			<p class="switch-text">
-				Нет аккаунта?
-				<a href={resolve('/register')}>Создать</a>
+				{t('auth.login.noAccount')}
+				<a href={resolve('/register')}>{t('auth.register.shortAction')}</a>
 			</p>
 		</form>
 	</section>

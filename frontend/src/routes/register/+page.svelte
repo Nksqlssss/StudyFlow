@@ -1,18 +1,31 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { translate, type TranslationKey } from '$lib/i18n';
 	import { auth } from '$lib/stores/auth';
+	import { settings } from '$lib/stores/settings';
 
 	let name = $state('');
 	let email = $state('');
 	let password = $state('');
+	let nameError = $state('');
+	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
+		translate($settings.language, key, params)
+	);
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		const trimmedName = name.trim();
 
+		nameError = '';
+
+		if (trimmedName.length < 2 || trimmedName.length > 24) {
+			nameError = t('auth.register.nameError');
+			return;
+		}
+
 		await auth.register({
-			name: trimmedName || undefined,
+			name: trimmedName,
 			email,
 			password
 		});
@@ -31,59 +44,70 @@
 
 	<section class="auth-layout">
 		<div class="auth-copy">
-			<p class="eyebrow">Регистрация</p>
-			<h1>Собери своё учебное пространство</h1>
+			<p class="eyebrow">{t('auth.register.eyebrow')}</p>
+			<h1>{t('auth.register.title')}</h1>
 			<p>
-				Создай аккаунт, чтобы хранить предметы, задания и прогресс в одном удобном месте.
+				{t('auth.register.description')}
 			</p>
 			<div class="auth-highlights">
-				<span>Предметы</span>
-				<span>Задания</span>
-				<span>Настройки</span>
+				<span>{t('nav.subjects')}</span>
+				<span>{t('tasks.title')}</span>
+				<span>{t('nav.settings')}</span>
 			</div>
 		</div>
 
 		<form class="auth-form" onsubmit={handleSubmit}>
 			<div class="form-header">
-				<h2>Создать аккаунт</h2>
-				<p>Заполни данные, чтобы начать пользоваться StudyFlow.</p>
+				<h2>{t('auth.register.formTitle')}</h2>
+				<p>{t('auth.register.formDescription')}</p>
 			</div>
 
 			<label>
-				<span>Имя</span>
+				<span>{t('auth.form.name')}</span>
 				<input 
 					type="text" 
 					name="name" 
-					placeholder="Имя" 
+					placeholder={t('auth.form.namePlaceholder')}
 					autocomplete="name" 
 					bind:value={name}
+					aria-invalid={!!nameError}
+					aria-describedby={nameError ? 'name-error' : undefined}
+					required
+					minlength="2"
+					maxlength="24"
 				/>
+				{#if nameError}
+					<span id="name-error" class="field-error">{nameError}</span>
+				{/if}
 			</label>
 
 			<label>
-				<span>Email</span>
+				<span>{t('auth.form.email')}</span>
 				<input 
 					type="email" 
 					name="email" 
 					placeholder="you@example.com" 
 					autocomplete="email" 
 					bind:value={email}
+					required
 				/>
 			</label>
 
 			<label>
-				<span>Пароль</span>
+				<span>{t('auth.form.password')}</span>
 				<input
 					type="password"
 					name="password"
-					placeholder="Минимум 8 символов"
+					placeholder={t('auth.form.passwordPlaceholder')}
 					autocomplete="new-password"
 					bind:value={password}
+					required
+					minlength="8"
 				/>
 			</label>
 
 			<button type="submit" disabled={$auth.isLoading}>
-				{$auth.isLoading ? 'Создаём...' : 'Создать аккаунт'}
+				{$auth.isLoading ? t('auth.register.loading') : t('auth.register.action')}
 			</button>
 
 			{#if $auth.error}
@@ -91,8 +115,8 @@
 			{/if}
 
 			<p class="switch-text">
-				Уже есть аккаунт?
-				<a href={resolve('/login')}>Войти</a>
+				{t('auth.register.hasAccount')}
+				<a href={resolve('/login')}>{t('auth.login.action')}</a>
 			</p>
 		</form>
 	</section>
@@ -222,6 +246,11 @@
 		box-shadow: 0 0 0 4px var(--accent-primary-bg);
 	}
 
+	input[aria-invalid='true'] {
+		border-color: var(--state-danger-soft-border);
+		box-shadow: 0 0 0 4px var(--state-danger-soft-bg);
+	}
+
 	button {
 		min-height: 52px;
 		border: 0;
@@ -237,6 +266,13 @@
 		color: var(--state-danger-soft-text);
 		font-size: 14px;
 		text-align: center;
+	}
+
+	.field-error {
+		color: var(--state-danger-soft-text);
+		font-size: 13px;
+		font-weight: 700;
+		line-height: 1.4;
 	}
 
 	.switch-text {
