@@ -52,6 +52,11 @@ export const translations = {
 		'landing.features.focus.description':
 			'Открывай StudyFlow, когда нужно быстро понять, что делать дальше и на чём сфокусироваться.',
 
+		'auth.verify.eyebrow': 'Подтверждение почты',
+		'auth.verify.title': 'Проверяем вашу почту',
+		'auth.verify.description': 'Подождите немного, пока мы проверим ссылку подтверждения вашего email.',
+		'auth.verify.pending': 'Проверяем ссылку подтверждения...',
+		'auth.verify.backToLogin': 'Вернуться ко входу',
 		'auth.form.name': 'Имя',
 		'auth.form.namePlaceholder': 'Имя',
 		'auth.form.email': 'Email',
@@ -329,6 +334,11 @@ export const translations = {
 		'landing.features.focus.description':
 			'Open StudyFlow when you need to quickly understand what to do next and where to focus.',
 
+		'auth.verify.eyebrow': 'Email verification',
+		'auth.verify.title': 'Verifying your email',
+		'auth.verify.description': 'Please wait a moment while we check your email verification link.',
+		'auth.verify.pending': 'Checking your verification link...',
+		'auth.verify.backToLogin': 'Back to login',
 		'auth.form.name': 'Name',
 		'auth.form.namePlaceholder': 'Name',
 		'auth.form.email': 'Email',
@@ -604,6 +614,11 @@ export const translations = {
 		'landing.features.focus.description':
 			'Otwórz StudyFlow, gdy chcesz szybko zrozumieć, co robić dalej i na czym się skupić.',
 
+		'auth.verify.eyebrow': 'Potwierdzenie adresu email',
+		'auth.verify.title': 'Weryfikujemy Twój email',
+		'auth.verify.description': 'Poczekaj chwilę, sprawdzamy link potwierdzający Twój adres email.',
+		'auth.verify.pending': 'Sprawdzanie linku potwierdzającego...',
+		'auth.verify.backToLogin': 'Wróć do logowania',
 		'auth.form.name': 'Imię',
 		'auth.form.namePlaceholder': 'Imię',
 		'auth.form.email': 'Email',

@@ -46,6 +46,13 @@ export function login(data: LoginBody) {
 	});
 }
 
+export function verifyEmail(token: string) {
+	return apiFetch<{ message: string }>('/auth/verify-email', {
+		method: 'POST',
+		body: { token }
+	});
+}
+
 export function register(data: RegisterBody) {
 	return apiFetch<AuthResponse>('/auth/register', {
 		method: 'POST',
