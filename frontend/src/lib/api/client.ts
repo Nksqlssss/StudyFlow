@@ -1,4 +1,4 @@
-import { PUBLIC_API_URL } from '$env/static/public'
+import { PUBLIC_API_URL } from '$env/static/public';
 
 type ApiOptions = {
 	method?: string;
@@ -6,6 +6,15 @@ type ApiOptions = {
 	token?: string | null;
 	fetcher?: typeof fetch;
 };
+
+export class ApiError extends Error {
+	status: number;
+
+	constructor(message: string, status: number) {
+		super(message);
+		this.status = status;
+	}
+}
 
 export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
 	const headers = new Headers();
@@ -29,7 +38,7 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
 	const data = await response.json().catch(() => null);
 
 	if (!response.ok) {
-		throw new Error(data?.message ?? 'Request failed');
+		throw new ApiError(data?.message ?? 'Request failed', response.status);
 	}
 
 	return data as T;
