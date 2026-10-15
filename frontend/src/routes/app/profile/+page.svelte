@@ -4,18 +4,19 @@
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import { formatLongDate, translate, type TranslationKey } from '$lib/i18n';
 	import { auth } from '$lib/stores/auth';
+	import { profileStats } from '$lib/stores/profileStats';
 	import { settings } from '$lib/stores/settings';
 
 	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
 		translate($settings.language, key, params)
 	);
 
-	const stats = [
-		{ label: 'profile.stats.subjects', value: 8 },
-		{ label: 'profile.stats.tasks', value: 42 },
-		{ label: 'profile.stats.completed', value: 27 },
-		{ label: 'profile.stats.overdue', value: 3 }
-	] as const;
+	const stats = $derived([
+		{ label: 'profile.stats.subjects', value: $profileStats.subjects },
+		{ label: 'profile.stats.tasks', value: $profileStats.tasks },
+		{ label: 'profile.stats.completed', value: $profileStats.completed },
+		{ label: 'profile.stats.overdue', value: $profileStats.overdue }
+	] as const);
 
 	const createdAtValue = $derived(
 		$auth.user?.createdAt
