@@ -1,4 +1,4 @@
-import { apiFetch } from './client'
+import { apiFetch } from './client';
 
 export type AuthUser = {
 	id: string;
@@ -32,6 +32,13 @@ export type MeResponse = {
 	user: AuthUser;
 };
 
+export type UpdateProfileBody = {
+	name?: string;
+	username?: string | null;
+	birthDate?: string | null;
+	isPublic?: boolean;
+};
+
 export function login(data: LoginBody) {
 	return apiFetch<AuthResponse>('/auth/login', {
 		method: 'POST',
@@ -48,6 +55,14 @@ export function register(data: RegisterBody) {
 
 export function getMe(token: string) {
 	return apiFetch<MeResponse>('/auth/me', {
+		token
+	});
+}
+
+export function updateProfile(data: UpdateProfileBody, token: string) {
+	return apiFetch<MeResponse>('/users/me', {
+		method: 'PATCH',
+		body: data,
 		token
 	});
 }

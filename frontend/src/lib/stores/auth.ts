@@ -3,10 +3,13 @@ import {
 	getMe,
 	login as loginApi,
 	register as registerApi,
+	updateProfile as updateProfileApi,
 	type AuthUser,
 	type LoginBody,
-	type RegisterBody
+	type RegisterBody,
+	type UpdateProfileBody
 } from '$lib/api/auth';
+import { ApiError } from '$lib/api/client';
 import { writable } from 'svelte/store';
 import { settings } from './settings';
 import { subjects } from './subjects';
@@ -152,6 +155,46 @@ function createAuthStore() {
 			subjects.clear();
 			tasks.clear();
 			settings.clear();
+		},
+
+		async updateProfile(data: UpdateProfileBody): Promise<boolean> {
+			update((state) => ({
+				...state,
+				isLoading: true,
+				error: null
+			}));
+
+			const token = browser ? localStorage.getItem(TOKEN_KEY) : null;
+
+			if (!token) {
+				update((state) => ({
+					...state,
+					isLoading: false,
+					error: 'Not authenticated'
+				}));
+
+				throw new ApiError('Ваша сессия истекла', 401);
+			}
+
+			try {
+				const response = await updateProfileApi(data, token);
+				update((state) => ({
+					...state,
+					user: response.user,
+					isLoading: false,
+					error: null
+				}));
+
+				return true;
+			} catch (err) {
+				update((state) => ({
+					...state,
+					isLoading: false,
+					error: err instanceof Error ? err.message : 'Profile update failed'
+				}));
+
+				throw err;
+			}
 		}
 	};
 }
