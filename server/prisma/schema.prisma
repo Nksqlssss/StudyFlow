@@ -48,21 +48,35 @@ enum CompletedTasksVisibility {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
+  id              String    @id @default(uuid())
+  email           String    @unique
+  passwordHash    String
+  emailVerifiedAt DateTime?
 
-  name         String
-  username     String?  @unique
-  avatarUrl    String?
-  birthDate    DateTime?
-  isPublic     Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  name      String
+  username  String?   @unique
+  avatarUrl String?
+  birthDate DateTime?
+  isPublic  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  settings UserSettings?
-  subjects Subject[]
-  tasks    Task[]
+  settings                UserSettings?
+  subjects                Subject[]
+  tasks                   Task[]
+  emailVerificationTokens EmailVerificationToken[]
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model UserSettings {

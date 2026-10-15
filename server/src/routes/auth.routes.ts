@@ -1,6 +1,9 @@
 import bcrypt from 'bcrypt'
 import type { FastifyInstance } from 'fastify'
+import { createHash } from 'node:crypto'
 import { z } from 'zod'
+import { createEmailVerificationToken } from '../lib/email-verification.js'
+import { sendVerificationEmail } from '../lib/email.js'
 import { signAccessToken } from '../lib/jwt.js'
 import { prisma } from '../lib/prisma.js'
 import { publicUserSelect } from '../lib/user-select.js'
@@ -15,6 +18,10 @@ const registerSchema = z.object({
 const loginSchema = z.object({
 	email: z.string().email(),
 	password: z.string().min(1)
+})
+
+const verifyEmailSchema = z.object({
+	token: z.string().regex(/^[a-f0-9]{64}$/)
 })
 
 export async function authRoutes(app: FastifyInstance) {
@@ -67,16 +74,68 @@ export async function authRoutes(app: FastifyInstance) {
 				select: publicUserSelect
 			})
 
-			const accessToken = signAccessToken({
-				userId: user.id
-			})
+			const token = await createEmailVerificationToken(user.id)
+
+			await sendVerificationEmail(user.email, token)
 
 			return reply.status(201).send({
-				accessToken,
+				message: 'Check your email to verify your account',
 				user
 			})
 		}
 	)
+
+	app.post('/auth/verify-email', async (request, reply) => {
+		const result = verifyEmailSchema.safeParse(request.body)
+
+		if (!result.success) {
+			return reply.status(400).send({
+				message: 'Invalid verification token'
+			})
+		}
+
+		const { token } = result.data
+		const tokenHash = createHash('sha256').update(token).digest('hex')
+		const verificationRecord = await prisma.emailVerificationToken.findUnique({
+			where: {
+				tokenHash: tokenHash
+			}
+		})
+
+		if (!verificationRecord) {
+			return reply.status(400).send({
+				message: 'Invalid or expired verification token'
+			})
+		}
+
+		const now = new Date()
+		if (verificationRecord.expiresAt <= now) {
+			return reply.status(400).send({
+				message: 'Invalid or expired verification token'
+			})
+		}
+
+		await prisma.$transaction([
+			prisma.user.update({
+				where: {
+					id: verificationRecord.userId
+				},
+				data: {
+					emailVerifiedAt: new Date()
+				}
+			}),
+
+			prisma.emailVerificationToken.delete({
+				where: {
+					id: verificationRecord.id
+				}
+			})
+		])
+
+		return reply.status(200).send({
+			message: 'Email verified successfully'
+		})
+	})
 
 	app.post(
 		'/auth/login',
@@ -107,7 +166,8 @@ export async function authRoutes(app: FastifyInstance) {
 				},
 				select: {
 					...publicUserSelect,
-					passwordHash: true
+					passwordHash: true,
+					emailVerifiedAt: true
 				}
 			})
 
@@ -122,6 +182,13 @@ export async function authRoutes(app: FastifyInstance) {
 			if (!isPasswordValid) {
 				return reply.status(401).send({
 					message: 'Invalid email or password'
+				})
+			}
+
+			if (user.emailVerifiedAt === null) {
+				return reply.status(403).send({
+					message: 'Email verification required',
+					code: 'EMAIL_NOT_VERIFIED'
 				})
 			}
 
