@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { priorityLabel, translate, type TranslationKey } from '$lib/i18n';
@@ -12,7 +11,6 @@
 	let showClearAllModal = $state(false);
 	let showClearTasksModal = $state(false);
 	let showResetSettingsModal = $state(false);
-	let showLogoutModalOpen = $state(false);
 	let showModal = $state(false);
 	let actionLoading = $state(false);
 	let actionError: string | null = $state(null);
@@ -21,6 +19,24 @@
 	);
 
 	const priorities: TaskPriority[] = ['low', 'medium', 'high'];
+
+	function errorText(message: string): string {
+		const keys: Record<string, TranslationKey> = {
+			'Failed to load settings': 'settings.errors.load',
+			'Failed to update settings': 'settings.errors.update',
+			'Failed to reset settings': 'settings.errors.reset',
+			'You must be logged in to update settings': 'profile.errors.session',
+			'You must be logged in to reset settings': 'profile.errors.session',
+			Unauthorized: 'profile.errors.session',
+			'Invalid request body': 'profile.errors.invalidData',
+			'Failed to fetch': 'settings.errors.network',
+			'NetworkError when attempting to fetch resource.': 'settings.errors.network',
+			'Load failed': 'settings.errors.network',
+			'Internal Server Error': 'profile.errors.server'
+		};
+
+		return t(keys[message] ?? 'common.somethingWentWrong');
+	}
 
 	function modalToggle() {
 		showModal = !showModal;
@@ -87,11 +103,6 @@
 			actionLoading = false;
 		}
 	}
-
-	function handleLogout() {
-		auth.logout();
-		goto('/');
-	}
 </script>
 
 <main class="settings-page">
@@ -106,7 +117,7 @@
 	</header>
 
 	{#if $settingsError}
-		<p class="error-text">{$settingsError}</p>
+		<p class="error-text" role="alert">{errorText($settingsError)}</p>
 	{/if}
 	<section class="settings-section">
 		<div class="section-heading">
@@ -346,9 +357,6 @@
 			>
 				{t('settings.data.resetSettings')}
 			</button>
-			<button type="button" class="danger-action" onclick={() => (showLogoutModalOpen = true)}>
-				{t('settings.account.logout')}
-			</button>
 		</div>
 	</section>
 
@@ -375,7 +383,7 @@
 		variant="danger"
 		onConfirm={handleClearTasks}
 		onCancel={() => (showClearTasksModal = false)}
-		error={actionError}
+		error={actionError ? errorText(actionError) : null}
 	/>
 {/if}
 
@@ -388,7 +396,7 @@
 		variant="danger"
 		onConfirm={handleClearAll}
 		onCancel={() => (showClearAllModal = false)}
-		error={actionError}
+		error={actionError ? errorText(actionError) : null}
 	/>
 {/if}
 
@@ -401,19 +409,7 @@
 		variant="danger"
 		onConfirm={handleResetSettings}
 		onCancel={() => (showResetSettingsModal = false)}
-		error={actionError}
-	/>
-{/if}
-
-{#if showLogoutModalOpen}
-	<ConfirmModal
-		title={t('settings.logout.title')}
-		description={t('settings.logout.description')}
-		confirmText={t('settings.account.logout')}
-		cancelText={t('common.cancel')}
-		variant="danger"
-		onConfirm={handleLogout}
-		onCancel={() => (showLogoutModalOpen = false)}
+		error={actionError ? errorText(actionError) : null}
 	/>
 {/if}
 
@@ -489,6 +485,7 @@
 
 	.setting-row {
 		display: grid;
+		min-width: 0;
 		gap: 14px;
 		padding-top: 16px;
 		border-top: 1px solid var(--border-primary);
@@ -515,6 +512,7 @@
 
 	button,
 	select {
+		min-width: 0;
 		min-height: 44px;
 		border: 1px solid var(--border-secondary);
 		border-radius: 14px;
@@ -523,6 +521,18 @@
 		font: inherit;
 		font-weight: 700;
 		cursor: pointer;
+	}
+
+	button {
+		padding: 10px 14px;
+		overflow-wrap: anywhere;
+	}
+
+	button:focus-visible,
+	select:focus-visible,
+	.switch-row input:focus-visible + .switch {
+		outline: 2px solid var(--border-accent);
+		outline-offset: 3px;
 	}
 
 	button:disabled,
@@ -556,11 +566,14 @@
 
 	.switch-row input {
 		position: absolute;
+		width: 1px;
+		height: 1px;
 		opacity: 0;
 		pointer-events: none;
 	}
 
 	.switch {
+		flex-shrink: 0;
 		width: 52px;
 		height: 30px;
 		border-radius: 999px;
@@ -590,7 +603,7 @@
 	}
 
 	.language-grid {
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 
 	.language-grid button {
@@ -651,8 +664,16 @@
 			align-items: center;
 		}
 
+		.switch-row {
+			grid-template-columns: minmax(0, 1fr) auto;
+		}
+
 		.actions-grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.actions-grid > button:last-child:nth-child(odd) {
+			grid-column: 1 / -1;
 		}
 	}
 
