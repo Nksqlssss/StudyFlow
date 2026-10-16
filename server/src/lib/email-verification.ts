@@ -22,25 +22,17 @@ export function getEmailVerificationExpiry(): Date {
 	return new Date(now.getTime() + 30 * 60 * 1000)
 }
 
-export async function createEmailVerificationToken(
-	userId: string
-): Promise<string> {
+export async function createEmailVerificationToken(userId: string) {
 	const tokens = generateEmailVerificationToken()
 	const expiration = getEmailVerificationExpiry()
 
-	await prisma.$transaction([
-		prisma.emailVerificationToken.deleteMany({
-			where: { userId }
-		}),
+	await prisma.emailVerificationToken.create({
+		data: {
+			userId,
+			tokenHash: tokens.tokenHash,
+			expiresAt: expiration
+		}
+	})
 
-		prisma.emailVerificationToken.create({
-			data: {
-				userId,
-				tokenHash: tokens.tokenHash,
-				expiresAt: expiration
-			}
-		})
-	])
-
-	return tokens.token
+	return tokens
 }

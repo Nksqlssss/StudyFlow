@@ -24,6 +24,10 @@ const verifyEmailSchema = z.object({
 	token: z.string().regex(/^[a-f0-9]{64}$/)
 })
 
+const resendVerificationSchema = z.object({
+	email: z.string().email()
+})
+
 export async function authRoutes(app: FastifyInstance) {
 	app.post(
 		'/auth/register',
@@ -74,7 +78,7 @@ export async function authRoutes(app: FastifyInstance) {
 				select: publicUserSelect
 			})
 
-			const token = await createEmailVerificationToken(user.id)
+			const { token } = await createEmailVerificationToken(user.id)
 
 			await sendVerificationEmail(user.email, token)
 
@@ -125,9 +129,9 @@ export async function authRoutes(app: FastifyInstance) {
 				}
 			}),
 
-			prisma.emailVerificationToken.delete({
+			prisma.emailVerificationToken.deleteMany({
 				where: {
-					id: verificationRecord.id
+					userId: verificationRecord.userId
 				}
 			})
 		])
@@ -136,6 +140,117 @@ export async function authRoutes(app: FastifyInstance) {
 			message: 'Email verified successfully'
 		})
 	})
+
+	app.post(
+		'/auth/resend-verification',
+		{
+			config: {
+				rateLimit: {
+					max: 3,
+					timeWindow: '1 minute'
+				}
+			}
+		},
+		async (request, reply) => {
+			const result = resendVerificationSchema.safeParse(request.body)
+
+			if (!result.success) {
+				return reply.status(400).send({
+					message: 'Invalid request body'
+				})
+			}
+
+			const email = result.data.email.trim().toLowerCase()
+
+			const responseMessage = {
+				message: 'If your email requires verification, we will send you a link'
+			}
+
+			try {
+				const user = await prisma.user.findUnique({
+					where: { email },
+					select: {
+						id: true,
+						emailVerifiedAt: true
+					}
+				})
+
+				if (!user || user.emailVerifiedAt !== null) {
+					return reply.status(200).send(responseMessage)
+				}
+
+				const lastToken = await prisma.emailVerificationToken.findFirst({
+					where: {
+						userId: user.id
+					},
+					orderBy: {
+						createdAt: 'desc'
+					},
+					select: {
+						createdAt: true
+					}
+				})
+
+				if (lastToken) {
+					const elapsed = Date.now() - lastToken.createdAt.getTime()
+
+					if (elapsed < 60 * 1000) {
+						return reply.status(200).send(responseMessage)
+					}
+				}
+
+				const tokens = await createEmailVerificationToken(user.id)
+
+				try {
+					await sendVerificationEmail(email, tokens.token)
+				} catch (error) {
+					request.log.error({ err: error }, 'Failed to send verification email')
+
+					try {
+						await prisma.emailVerificationToken.deleteMany({
+							where: {
+								userId: user.id,
+								tokenHash: tokens.tokenHash
+							}
+						})
+					} catch (cleanupError) {
+						request.log.error(
+							{ err: cleanupError },
+							'Failed to clean up verification token'
+						)
+					}
+
+					return reply.status(200).send(responseMessage)
+				}
+
+				// Письмо отправлено — удаляем старые токены
+				try {
+					await prisma.emailVerificationToken.deleteMany({
+						where: {
+							userId: user.id,
+							tokenHash: {
+								not: tokens.tokenHash
+							}
+						}
+					})
+				} catch (cleanupError) {
+					request.log.error(
+						{ err: cleanupError },
+						'Failed to delete old verification tokens'
+					)
+				}
+
+				return reply.status(200).send(responseMessage)
+			} catch (error) {
+				request.log.error(
+					{ err: error },
+					'Failed to process verification resend request'
+				)
+
+				return reply.status(200).send(responseMessage)
+			}
+		}
+	)
 
 	app.post(
 		'/auth/login',
