@@ -1,18 +1,22 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import ResendVerification from '$lib/components/auth/ResendVerification.svelte';
 	import { translate, type TranslationKey } from '$lib/i18n';
 	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
 
 	let email = $state('');
 	let password = $state('');
+	let verificationEmail = $state('');
 	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
 		translate($settings.language, key, params)
 	);
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
+
+		verificationEmail = email.trim();
 
 		await auth.login({
 			email,
@@ -53,11 +57,11 @@
 
 			<label>
 				<span>{t('auth.form.email')}</span>
-				<input 
+				<input
 					type="email"
-					name="email" 
-					placeholder="you@example.com" 
-					autocomplete="email" 
+					name="email"
+					placeholder="you@example.com"
+					autocomplete="email"
 					bind:value={email}
 				/>
 			</label>
@@ -67,7 +71,7 @@
 				<input
 					type="password"
 					name="password"
-					placeholder={t('auth.form.passwordPlaceholder')}
+					placeholder={t('auth.login.passwordPlaceholder')}
 					autocomplete="current-password"
 					bind:value={password}
 				/>
@@ -77,8 +81,22 @@
 				{$auth.isLoading ? t('auth.login.loading') : t('auth.login.action')}
 			</button>
 
-			{#if $auth.error}
-				<p class="error-message">{$auth.error}</p>
+			{#if $auth.errorCode === 'EMAIL_NOT_VERIFIED'}
+				<div class="verification-notice">
+					<div role="status">
+						<p class="notice-title">{t('auth.login.verifyTitle')}</p>
+						<p class="notice-description">{t('auth.login.verifyDescription')}</p>
+					</div>
+					<ResendVerification email={verificationEmail} />
+				</div>
+			{:else if $auth.error}
+				<p class="error-message" role="alert">
+					{#if $auth.error === 'Invalid email or password'}
+						{t('auth.login.errors.credentials')}
+					{:else if $auth.error}
+						{t('auth.login.errors.general')}
+					{/if}
+				</p>
 			{/if}
 
 			<p class="switch-text">
@@ -93,7 +111,7 @@
 	.auth-page {
 		position: relative;
 		min-height: 100vh;
-		padding: 24px max(20px, calc((100vw - 1080px) / 2));
+		padding: 100px max(20px, calc((100% - 1080px) / 2)) 40px;
 		display: flex;
 		align-items: center;
 		background: var(--bg-primary);
@@ -103,12 +121,13 @@
 	.auth-layout {
 		width: 100%;
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
+		grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
 		gap: 48px;
 		align-items: center;
 	}
 
 	.auth-copy {
+		min-width: 0;
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
@@ -142,8 +161,9 @@
 	h1 {
 		margin: 0 0 12px;
 		max-width: 620px;
-		font-size: clamp(42px, 7vw, 72px);
-		line-height: 0.98;
+		font-size: 56px;
+		line-height: 1.05;
+		overflow-wrap: anywhere;
 	}
 
 	p {
@@ -171,6 +191,7 @@
 
 	.auth-form {
 		display: grid;
+		min-width: 0;
 		gap: 18px;
 		padding: 28px;
 		border: 1px solid var(--border-primary);
@@ -186,10 +207,13 @@
 	h2 {
 		margin: 0 0 8px;
 		font-size: 28px;
+		line-height: 1.2;
+		overflow-wrap: anywhere;
 	}
 
 	label {
 		display: grid;
+		min-width: 0;
 		gap: 8px;
 		color: var(--text-muted);
 		font-size: 14px;
@@ -197,6 +221,7 @@
 	}
 
 	input {
+		min-width: 0;
 		width: 100%;
 		min-height: 52px;
 		padding: 0 16px;
@@ -215,6 +240,7 @@
 
 	button {
 		min-height: 52px;
+		padding: 12px 16px;
 		border: 0;
 		border-radius: 14px;
 		background: var(--gradient-primary);
@@ -224,10 +250,48 @@
 		cursor: pointer;
 	}
 
+	button:disabled {
+		cursor: wait;
+		opacity: 0.65;
+	}
+
+	button:focus-visible,
+	a:focus-visible {
+		outline: 2px solid var(--border-accent);
+		outline-offset: 4px;
+	}
+
+	.verification-notice {
+		display: grid;
+		gap: 14px;
+		min-width: 0;
+		padding: 16px;
+		border: 1px solid var(--border-accent);
+		border-radius: 14px;
+		background-color: var(--accent-primary-bg);
+	}
+
+	.notice-title {
+		margin-bottom: 6px;
+		color: var(--text-primary);
+		font-size: 15px;
+		font-weight: 700;
+	}
+
+	.notice-description {
+		font-size: 13px;
+		line-height: 1.6;
+	}
+
 	.error-message {
+		padding: 12px 14px;
+		border: 1px solid var(--state-danger-soft-border);
+		border-radius: 14px;
+		background-color: var(--state-danger-soft-bg);
 		color: var(--state-danger-soft-text);
 		font-size: 14px;
 		text-align: center;
+		overflow-wrap: anywhere;
 	}
 
 	.switch-text {
@@ -249,6 +313,20 @@
 		.auth-layout {
 			grid-template-columns: 1fr;
 			gap: 32px;
+		}
+
+		h1 {
+			font-size: 42px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		h1 {
+			font-size: 36px;
+		}
+
+		.auth-form {
+			padding: 24px 20px;
 		}
 	}
 </style>

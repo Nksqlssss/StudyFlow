@@ -9,10 +9,12 @@ type ApiOptions = {
 
 export class ApiError extends Error {
 	status: number;
+	code: string | null;
 
-	constructor(message: string, status: number) {
+	constructor(message: string, status: number, code: string | null) {
 		super(message);
 		this.status = status;
+		this.code = code;
 	}
 }
 
@@ -38,7 +40,11 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
 	const data = await response.json().catch(() => null);
 
 	if (!response.ok) {
-		throw new ApiError(data?.message ?? 'Request failed', response.status);
+		throw new ApiError(
+			data?.message ?? 'Request failed',
+			response.status,
+			typeof data?.code === 'string' ? data.code : null
+		);
 	}
 
 	return data as T;

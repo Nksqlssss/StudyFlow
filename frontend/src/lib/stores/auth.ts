@@ -20,6 +20,7 @@ type AuthState = {
 	token: string | null;
 	isLoading: boolean;
 	error: string | null;
+	errorCode: string | null;
 };
 
 const TOKEN_KEY = 'studyflow_token';
@@ -28,7 +29,8 @@ const initialState: AuthState = {
 	user: null,
 	token: browser ? localStorage.getItem(TOKEN_KEY) : null,
 	isLoading: browser ? Boolean(localStorage.getItem(TOKEN_KEY)) : false,
-	error: null
+	error: null,
+	errorCode: null
 };
 
 function createAuthStore() {
@@ -41,7 +43,8 @@ function createAuthStore() {
 			update((state) => ({
 				...state,
 				isLoading: true,
-				error: null
+				error: null,
+				errorCode: null
 			}));
 
 			try {
@@ -55,13 +58,15 @@ function createAuthStore() {
 					user: response.user,
 					token: response.accessToken,
 					isLoading: false,
-					error: null
+					error: null,
+					errorCode: null
 				});
 			} catch (error) {
 				update((state) => ({
 					...state,
 					isLoading: false,
-					error: error instanceof Error ? error.message : 'Login failed'
+					error: error instanceof Error ? error.message : 'Login failed',
+					errorCode: error instanceof ApiError ? error.code : null
 				}));
 			}
 		},
@@ -70,7 +75,8 @@ function createAuthStore() {
 			update((state) => ({
 				...state,
 				isLoading: true,
-				error: null
+				error: null,
+				errorCode: null
 			}));
 
 			try {
@@ -98,7 +104,8 @@ function createAuthStore() {
 			update((state) => ({
 				...state,
 				isLoading: true,
-				error: null
+				error: null,
+				errorCode: null
 			}));
 
 			const token = browser ? localStorage.getItem(TOKEN_KEY) : null;
@@ -108,7 +115,8 @@ function createAuthStore() {
 					user: null,
 					token: null,
 					isLoading: false,
-					error: null
+					error: null,
+					errorCode: null
 				});
 				settings.clear();
 
@@ -122,7 +130,8 @@ function createAuthStore() {
 					user: response.user,
 					token,
 					isLoading: false,
-					error: null
+					error: null,
+					errorCode: null
 				});
 			} catch {
 				if (browser) {
@@ -133,7 +142,8 @@ function createAuthStore() {
 					user: null,
 					token: null,
 					isLoading: false,
-					error: null
+					error: null,
+					errorCode: null
 				});
 				settings.clear();
 			}
@@ -148,7 +158,8 @@ function createAuthStore() {
 				user: null,
 				token: null,
 				isLoading: false,
-				error: null
+				error: null,
+				errorCode: null
 			});
 
 			subjects.clear();
@@ -160,7 +171,8 @@ function createAuthStore() {
 			update((state) => ({
 				...state,
 				isLoading: true,
-				error: null
+				error: null,
+				errorCode: null
 			}));
 
 			const token = browser ? localStorage.getItem(TOKEN_KEY) : null;
@@ -172,7 +184,7 @@ function createAuthStore() {
 					error: 'Not authenticated'
 				}));
 
-				throw new ApiError('Ваша сессия истекла', 401);
+				throw new ApiError('Ваша сессия истекла', 401, null);
 			}
 
 			try {
