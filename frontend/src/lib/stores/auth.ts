@@ -66,7 +66,7 @@ function createAuthStore() {
 			}
 		},
 
-		async register(data: RegisterBody) {
+		async register(data: RegisterBody): Promise<boolean> {
 			update((state) => ({
 				...state,
 				isLoading: true,
@@ -74,24 +74,23 @@ function createAuthStore() {
 			}));
 
 			try {
-				const response = await registerApi(data);
+				await registerApi(data);
 
-				if (browser) {
-					localStorage.setItem(TOKEN_KEY, response.accessToken);
-				}
-
-				set({
-					user: response.user,
-					token: response.accessToken,
+				update((state) => ({
+					...state,
 					isLoading: false,
 					error: null
-				});
+				}));
+
+				return true;
 			} catch (error) {
 				update((state) => ({
 					...state,
 					isLoading: false,
 					error: error instanceof Error ? error.message : 'Registration failed'
 				}));
+
+				return false;
 			}
 		},
 

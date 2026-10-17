@@ -39,6 +39,11 @@ export type UpdateProfileBody = {
 	isPublic?: boolean;
 };
 
+export type RegisterResponse = {
+	message: string;
+	user: AuthUser;
+};
+
 export function login(data: LoginBody) {
 	return apiFetch<AuthResponse>('/auth/login', {
 		method: 'POST',
@@ -53,8 +58,15 @@ export function verifyEmail(token: string) {
 	});
 }
 
+export function resendVerification(email: string) {
+	return apiFetch<{ message: string }>('/auth/resend-verification', {
+		method: 'POST',
+		body: { email }
+	});
+}
+
 export function register(data: RegisterBody) {
-	return apiFetch<AuthResponse>('/auth/register', {
+	return apiFetch<RegisterResponse>('/auth/register', {
 		method: 'POST',
 		body: data
 	});
