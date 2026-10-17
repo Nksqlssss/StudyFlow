@@ -1,15 +1,25 @@
 <script lang="ts">
-	const { description, onConfirm, onCancel, title, confirmText, cancelText, variant, error } =
-		$props<{
-			title: string;
-			description?: string;
-			confirmText?: string;
-			cancelText?: string;
-			onConfirm: () => void | Promise<void>;
-			onCancel: () => void;
-			variant?: 'danger' | 'success' | 'default';
-			error?: string | null;
-		}>();
+	type Props = {
+		title: string;
+		description?: string;
+		confirmText?: string;
+		cancelText?: string;
+		onConfirm: () => void | Promise<void>;
+		onCancel: () => void;
+		variant?: 'danger' | 'success' | 'default';
+		error?: string | null;
+	};
+
+	const {
+		description,
+		onConfirm,
+		onCancel,
+		title,
+		confirmText,
+		cancelText,
+		variant,
+		error
+	}: Props = $props();
 
 	let isPending = $state(false);
 

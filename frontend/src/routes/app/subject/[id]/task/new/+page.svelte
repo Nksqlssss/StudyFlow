@@ -13,6 +13,11 @@
 	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
 		translate($settings.language, key, params)
 	);
+	const now = new Date();
+	const year = now.getFullYear();
+	const month = String(now.getMonth() + 1).padStart(2, '0'); // Месяцы в JS идут от 0 до 11
+	const day = String(now.getDate()).padStart(2, '0');
+	const today = `${year}-${month}-${day}`;
 
 	let title = $state('');
 	let description = $state('');
@@ -38,6 +43,12 @@
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 
+		if (deadline) {
+			if (deadline < today) {
+				taskError.set(t('tasks.form.pastDeadlineError'));
+				return;
+			}
+		}
 		if ($taskLoading) return;
 		if (!title.trim()) return;
 		if (!$auth.token) return;
@@ -46,7 +57,7 @@
 			title: title.trim(),
 			description: description.trim() || undefined,
 			priority: selectedPriority,
-			deadline: deadline ? new Date(deadline) : undefined
+			deadline: deadline ? new Date(`${deadline}T23:59:59.999`) : undefined
 		};
 
 		try {
@@ -95,6 +106,7 @@
 				bind:value={deadline}
 				bind:this={dateInput}
 				onclick={openCalendar}
+				min={today}
 			/>
 		</label>
 		<p class="select-label">{t('tasks.form.priority')}</p>

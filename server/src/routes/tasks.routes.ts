@@ -46,6 +46,16 @@ export async function tasksRoutes(app: FastifyInstance) {
 				})
 			}
 
+			if (body.data.deadline) {
+				const deadline = new Date(body.data.deadline)
+
+				if (deadline < new Date()) {
+					return reply.status(400).send({
+						message: 'Deadline cannot be in the past'
+					})
+				}
+			}
+
 			const subject = await prisma.subject.findFirst({
 				where: {
 					id: params.data.subjectId,
@@ -201,6 +211,16 @@ export async function tasksRoutes(app: FastifyInstance) {
 				return reply.status(400).send({
 					message: 'Invalid request body'
 				})
+			}
+
+			if (body.data.deadline) {
+				const deadline = new Date(body.data.deadline)
+
+				if (deadline < new Date()) {
+					return reply.status(400).send({
+						message: 'Deadline cannot be in the past'
+					})
+				}
 			}
 
 			const task = await prisma.task.findFirst({

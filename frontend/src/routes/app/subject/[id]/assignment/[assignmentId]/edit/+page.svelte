@@ -24,7 +24,7 @@
 		translate($settings.language, key, params)
 	);
 	const task = $derived(
-		$tasks.find((task) => task.id === assignmentId && task.subjectId === subjectId)
+		$tasks.find((item) => item.id === assignmentId && item.subjectId === subjectId)
 	);
 
 	let title = $state('');
@@ -57,9 +57,14 @@
 		const year = date.getFullYear();
 		const month = String(date.getMonth() + 1).padStart(2, '0');
 		const day = String(date.getDate()).padStart(2, '0');
-
 		return `${year}-${month}-${day}`;
 	}
+
+	// The original overdue date remains valid if it was not changed.
+	const today = toDateInputValue(new Date());
+	const minDeadline = $derived(
+		deadline !== '' && deadline === initialForm.deadline && deadline < today ? deadline : today
+	);
 
 	function openCalendar() {
 		if (dateInput?.showPicker) {
@@ -72,15 +77,27 @@
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 
-		if ($taskLoading) return;
-		if (!$auth.token) return;
-		if (!task) return;
-		if (!title.trim()) return;
+		if ($taskLoading || !$auth.token || !task || !title.trim()) return;
+
+		taskError.set(null);
+
+		const deadlineChanged = deadline !== initialForm.deadline;
+		const currentToday = toDateInputValue(new Date());
+
+		if (deadlineChanged && deadline && deadline < currentToday) {
+			taskError.set('Нельзя установить дедлайн на прошедшую дату');
+			return;
+		}
 
 		const updateTaskBody = {
 			title: title.trim(),
 			description: description.trim() || null,
-			deadline: deadline ? new Date(`${deadline}T00:00:00`) : null,
+			// undefined: leave unchanged; null: remove; Date: update to end of local day.
+			deadline: !deadlineChanged
+				? undefined
+				: deadline
+					? new Date(`${deadline}T23:59:59.999`)
+					: null,
 			status: selectedStatus,
 			priority: selectedPriority
 		};
@@ -88,7 +105,9 @@
 		try {
 			await tasks.update($auth.token, assignmentId, updateTaskBody);
 			await goto(resolve(`/app/subject/${subjectId}/assignment/${assignmentId}`));
-		} catch (error) {}
+		} catch {
+			// tasks.update sets taskError.
+		}
 	}
 
 	$effect(() => {
@@ -107,7 +126,6 @@
 		deadline = nextForm.deadline;
 		selectedStatus = nextForm.status;
 		selectedPriority = nextForm.priority;
-
 		initialForm = nextForm;
 		isInitialized = true;
 	});
@@ -125,7 +143,6 @@
 			showDiscardModal = true;
 			return;
 		}
-
 		goto(resolve(`/app/subject/${subjectId}/assignment/${assignmentId}`));
 	}
 
@@ -168,7 +185,7 @@
 						type="text"
 						id="taskTitle"
 						class="input"
-						placeholder={task?.title || t('tasks.form.titlePlaceholder')}
+						placeholder={task.title || t('tasks.form.titlePlaceholder')}
 						bind:value={title}
 					/>
 				</label>
@@ -178,7 +195,7 @@
 					<textarea
 						id="taskDescription"
 						class="input textarea"
-						placeholder={task?.description || t('tasks.form.descriptionEditPlaceholder')}
+						placeholder={task.description || t('tasks.form.descriptionEditPlaceholder')}
 						bind:value={description}
 					></textarea>
 				</label>
@@ -192,6 +209,7 @@
 						bind:value={deadline}
 						bind:this={dateInput}
 						onclick={openCalendar}
+						min={minDeadline}
 					/>
 				</label>
 			</section>
@@ -236,9 +254,7 @@
 						</div>
 						<div>
 							<p class="tip-title">{t('tasks.form.tipTitle')}</p>
-							<p class="tip-text">
-								{t('tasks.form.tipText')}
-							</p>
+							<p class="tip-text">{t('tasks.form.tipText')}</p>
 						</div>
 					</div>
 				{/if}
@@ -277,9 +293,7 @@
 		title={t('tasks.detail.notFound.title')}
 		description={t('tasks.detail.notFound.description')}
 		confirmText={t('tasks.detail.backToSubject')}
-		onConfirm={() => {
-			goto(`/app/subject/${subjectId}`);
-		}}
+		onConfirm={() => goto(resolve(`/app/subject/${subjectId}`))}
 	/>
 {/if}
 

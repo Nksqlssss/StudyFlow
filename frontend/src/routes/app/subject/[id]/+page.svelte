@@ -94,10 +94,11 @@
 		} else if (activeTab === 'overdue') {
 			result = subjectTasks.filter((t) => t.deadline && t.deadline < now && t.status !== 'done');
 		} else {
-			result =
-				$settings.completedTasksVisibility === 'active_list'
-					? subjectTasks
-					: subjectTasks.filter((t) => t.status !== 'done');
+			result = subjectTasks.filter((t) => !t.deadline || t.deadline > now || t.status === 'done');
+
+			if ($settings.completedTasksVisibility !== 'active_list') {
+				result = result.filter((t) => t.status !== 'done');
+			}
 		}
 
 		return sortTasks(result);
