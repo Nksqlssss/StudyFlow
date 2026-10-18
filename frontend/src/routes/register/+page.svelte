@@ -83,6 +83,12 @@
 					<p>{t('auth.register.formDescription')}</p>
 				</div>
 
+				<button type="button" class="google-button">
+					<img src="/icons/google.svg" alt="" width="20" height="20" />
+					<span>{t('auth.google.register')}</span>
+				</button>
+				<div class="auth-divider"><span>{t('auth.google.or')}</span></div>
+
 				<label>
 					<span>{t('auth.form.name')}</span>
 					<input
@@ -380,6 +386,49 @@
 		font: inherit;
 		font-weight: 800;
 		cursor: pointer;
+	}
+
+	.google-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+		width: 100%;
+		border: 1px solid var(--border-primary);
+		background: var(--surface-input);
+		color: var(--text-primary);
+		font-weight: 700;
+		transition: border-color 160ms ease, background-color 160ms ease;
+	}
+
+	.google-button:hover {
+		border-color: var(--border-accent);
+		background: var(--surface-primary);
+	}
+
+	.google-button img {
+		flex-shrink: 0;
+	}
+
+	.google-button span {
+		min-width: 0;
+		overflow-wrap: anywhere;
+	}
+
+	.auth-divider {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		color: var(--text-secondary);
+		font-size: 13px;
+	}
+
+	.auth-divider::before,
+	.auth-divider::after {
+		content: '';
+		flex: 1;
+		height: 1px;
+		background: var(--border-primary);
 	}
 
 	button:disabled {

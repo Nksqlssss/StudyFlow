@@ -5,6 +5,7 @@ type ApiOptions = {
 	body?: unknown;
 	token?: string | null;
 	fetcher?: typeof fetch;
+	credentials?: RequestCredentials;
 };
 
 export class ApiError extends Error {
@@ -34,7 +35,8 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
 	const response = await fetcher(`${PUBLIC_API_URL}${path}`, {
 		method: options.method ?? 'GET',
 		headers,
-		body: options.body ? JSON.stringify(options.body) : undefined
+		body: options.body ? JSON.stringify(options.body) : undefined,
+		credentials: options.credentials
 	});
 
 	const data = await response.json().catch(() => null);

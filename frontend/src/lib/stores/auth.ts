@@ -1,5 +1,7 @@
 import { browser } from '$app/environment';
+import type { AuthResponse } from '$lib/api/auth';
 import {
+	exchangeGoogleCode,
 	getMe,
 	login as loginApi,
 	register as registerApi,
@@ -36,6 +38,20 @@ const initialState: AuthState = {
 function createAuthStore() {
 	const { subscribe, set, update } = writable<AuthState>(initialState);
 
+	function saveSession(response: AuthResponse) {
+		if (browser) {
+			localStorage.setItem(TOKEN_KEY, response.accessToken);
+		}
+
+		set({
+			user: response.user,
+			token: response.accessToken,
+			isLoading: false,
+			error: null,
+			errorCode: null
+		});
+	}
+
 	return {
 		subscribe,
 
@@ -50,17 +66,7 @@ function createAuthStore() {
 			try {
 				const response = await loginApi(data);
 
-				if (browser) {
-					localStorage.setItem(TOKEN_KEY, response.accessToken);
-				}
-
-				set({
-					user: response.user,
-					token: response.accessToken,
-					isLoading: false,
-					error: null,
-					errorCode: null
-				});
+				saveSession(response);
 			} catch (error) {
 				update((state) => ({
 					...state,
@@ -68,6 +74,32 @@ function createAuthStore() {
 					error: error instanceof Error ? error.message : 'Login failed',
 					errorCode: error instanceof ApiError ? error.code : null
 				}));
+			}
+		},
+
+		async loginWithGoogle(code: string): Promise<boolean> {
+			update((state) => ({
+				...state,
+				isLoading: true,
+				error: null,
+				errorCode: null
+			}));
+
+			try {
+				const response = await exchangeGoogleCode(code);
+
+				saveSession(response);
+
+				return true;
+			} catch (error) {
+				update((state) => ({
+					...state,
+					isLoading: false,
+					error: error instanceof Error ? error.message : 'Login failed',
+					errorCode: error instanceof ApiError ? error.code : null
+				}));
+
+				return false;
 			}
 		},
 

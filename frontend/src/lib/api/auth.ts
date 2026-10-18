@@ -72,6 +72,14 @@ export function register(data: RegisterBody) {
 	});
 }
 
+export function exchangeGoogleCode(code: string) {
+	return apiFetch<AuthResponse>('/auth/google/exchange', {
+		method: 'POST',
+		body: { code },
+		credentials: 'include'
+	});
+}
+
 export function getMe(token: string) {
 	return apiFetch<MeResponse>('/auth/me', {
 		token
