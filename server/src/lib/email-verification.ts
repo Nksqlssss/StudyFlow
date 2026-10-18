@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { prisma } from './prisma.js'
+import type { PrismaClient } from '../generated/prisma/client.js'
 
 type GeneratedToken = {
 	token: string
@@ -22,11 +23,11 @@ export function getEmailVerificationExpiry(): Date {
 	return new Date(now.getTime() + 30 * 60 * 1000)
 }
 
-export async function createEmailVerificationToken(userId: string) {
+export async function createEmailVerificationToken(userId: string, db: PrismaClient = prisma) {
 	const tokens = generateEmailVerificationToken()
 	const expiration = getEmailVerificationExpiry()
 
-	await prisma.emailVerificationToken.create({
+	await db.emailVerificationToken.create({
 		data: {
 			userId,
 			tokenHash: tokens.tokenHash,

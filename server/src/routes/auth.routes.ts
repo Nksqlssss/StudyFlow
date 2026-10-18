@@ -5,7 +5,8 @@ import { z } from 'zod'
 import { createEmailVerificationToken } from '../lib/email-verification.js'
 import { sendVerificationEmail } from '../lib/email.js'
 import { signAccessToken } from '../lib/jwt.js'
-import { prisma } from '../lib/prisma.js'
+import { prisma as defaultPrisma } from '../lib/prisma.js'
+import type { PrismaClient } from '../generated/prisma/client.js'
 import { publicUserSelect } from '../lib/user-select.js'
 import { authenticate } from '../middleware/authenticate.js'
 
@@ -28,7 +29,14 @@ const resendVerificationSchema = z.object({
 	email: z.string().email()
 })
 
-export async function authRoutes(app: FastifyInstance) {
+export async function authRoutes(app: FastifyInstance, options: {
+	db?: PrismaClient
+	sendVerification?: typeof sendVerificationEmail
+	authenticateUser?: typeof authenticate
+} = {}) {
+	const prisma = options.db ?? defaultPrisma
+	const sendEmail = options.sendVerification ?? sendVerificationEmail
+	const authenticateUser = options.authenticateUser ?? authenticate
 	app.post(
 		'/auth/register',
 		{
@@ -78,9 +86,9 @@ export async function authRoutes(app: FastifyInstance) {
 				select: publicUserSelect
 			})
 
-			const { token } = await createEmailVerificationToken(user.id)
+			const { token } = await createEmailVerificationToken(user.id, prisma)
 
-			await sendVerificationEmail(user.email, token)
+			await sendEmail(user.email, token)
 
 			return reply.status(201).send({
 				message: 'Check your email to verify your account',
@@ -199,10 +207,10 @@ export async function authRoutes(app: FastifyInstance) {
 					}
 				}
 
-				const tokens = await createEmailVerificationToken(user.id)
+				const tokens = await createEmailVerificationToken(user.id, prisma)
 
 				try {
-					await sendVerificationEmail(email, tokens.token)
+					await sendEmail(email, tokens.token)
 				} catch (error) {
 					request.log.error({ err: error }, 'Failed to send verification email')
 
@@ -292,7 +300,9 @@ export async function authRoutes(app: FastifyInstance) {
 				})
 			}
 
-			const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
+			const isPasswordValid = user.passwordHash
+				? await bcrypt.compare(password, user.passwordHash)
+				: false
 
 			if (!isPasswordValid) {
 				return reply.status(401).send({
@@ -320,7 +330,7 @@ export async function authRoutes(app: FastifyInstance) {
 		}
 	)
 
-	app.get('/auth/me', { preHandler: authenticate }, async request => {
+	app.get('/auth/me', { preHandler: authenticateUser }, async request => {
 		return {
 			user: request.user
 		}

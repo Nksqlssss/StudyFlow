@@ -50,7 +50,7 @@ enum CompletedTasksVisibility {
 model User {
   id              String    @id @default(uuid())
   email           String    @unique
-  passwordHash    String
+  passwordHash    String?
   emailVerifiedAt DateTime?
 
   name      String
@@ -65,6 +65,52 @@ model User {
   subjects                Subject[]
   tasks                   Task[]
   emailVerificationTokens EmailVerificationToken[]
+  oauthAccounts           OAuthAccount[]
+  googleOAuthStates       GoogleOAuthState[]
+  googleOAuthExchanges    GoogleOAuthExchange[]
+}
+
+model OAuthAccount {
+  id                String   @id @default(uuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  email             String?
+  createdAt         DateTime @default(now())
+
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  googleExchanges GoogleOAuthExchange[]
+
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
+}
+
+model GoogleOAuthState {
+  stateHash     String   @id
+  browserHash   String
+  nonceHash     String
+  codeChallenge String
+  intent        String
+  userId        String?
+  expiresAt     DateTime
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model GoogleOAuthExchange {
+  codeHash       String   @id
+  browserHash    String
+  userId         String
+  oauthAccountId String
+  expiresAt      DateTime
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oauthAccount OAuthAccount @relation(fields: [oauthAccountId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([oauthAccountId])
 }
 
 model EmailVerificationToken {
