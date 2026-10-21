@@ -38,6 +38,10 @@
 			isRegistered = true;
 		}
 	}
+
+	function handleGoogleRegister() {
+		window.location.assign('http://localhost:3000/auth/google');
+	}
 </script>
 
 <main class="auth-page">
@@ -83,7 +87,7 @@
 					<p>{t('auth.register.formDescription')}</p>
 				</div>
 
-				<button type="button" class="google-button">
+				<button type="button" class="google-button" onclick={handleGoogleRegister}>
 					<img src="/icons/google.svg" alt="" width="20" height="20" />
 					<span>{t('auth.google.register')}</span>
 				</button>
@@ -398,7 +402,9 @@
 		background: var(--surface-input);
 		color: var(--text-primary);
 		font-weight: 700;
-		transition: border-color 160ms ease, background-color 160ms ease;
+		transition:
+			border-color 160ms ease,
+			background-color 160ms ease;
 	}
 
 	.google-button:hover {
