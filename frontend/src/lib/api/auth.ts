@@ -154,3 +154,10 @@ export function changePassword(data: changePasswordBody, token: string) {
 		token
 	});
 }
+
+export function deleteAccount(token: string) {
+	return apiFetch<void>('/users/me', {
+		method: 'DELETE',
+		token
+	});
+}

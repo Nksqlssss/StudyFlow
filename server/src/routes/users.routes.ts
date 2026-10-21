@@ -24,7 +24,7 @@ const updateUserSchema = z
 	})
 
 export async function userRoutes(app: FastifyInstance) {
-	app.patch(
+	;(app.patch(
 		'/users/me',
 		{
 			preHandler: authenticate
@@ -74,5 +74,29 @@ export async function userRoutes(app: FastifyInstance) {
 				throw error
 			}
 		}
-	)
+	),
+		app.delete(
+			'/users/me',
+			{
+				preHandler: authenticate
+			},
+			async (request, reply) => {
+				const userId = request.user.id
+
+				const result = await prisma.user.deleteMany({
+					where: {
+						id: userId
+					}
+				})
+
+				if (result.count === 0) {
+					return reply.code(404).send({
+						error: 'USER_NOT_FOUND',
+						message: 'User not found'
+					})
+				}
+
+				return reply.code(204).send()
+			}
+		))
 }

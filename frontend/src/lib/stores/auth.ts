@@ -3,6 +3,7 @@ import type { AuthMethodsResponse, AuthResponse } from '$lib/api/auth';
 import {
 	addGoogleAccount,
 	changePassword as changePasswordApi,
+	deleteAccount as deleteAccountApi,
 	deleteGoogleAccount,
 	exchangeGoogleCode,
 	getAuthMethods,
@@ -490,6 +491,45 @@ function createAuthStore() {
 						...state,
 						passwordError: err instanceof Error ? err.message : 'Password change failed',
 						isPasswordLoading: false
+					}));
+				}
+
+				return false;
+			}
+		},
+
+		async deleteAccount() {
+			const token = browser ? localStorage.getItem(TOKEN_KEY) : undefined;
+
+			if (!token) {
+				update((state) => ({
+					...state,
+					error: 'Not authenticated'
+				}));
+
+				return false;
+			}
+
+			update((state) => ({
+				...state,
+				isLoading: true,
+				error: null
+			}));
+
+			try {
+				await deleteAccountApi(token);
+
+				logout();
+
+				return true;
+			} catch (err) {
+				if (err instanceof ApiError && err.status === 401) {
+					logout();
+				} else {
+					update((state) => ({
+						...state,
+						error: err instanceof Error ? err.message : 'Account deletion failed',
+						isLoading: false
 					}));
 				}
 

@@ -27,24 +27,26 @@
 	let name = $state('');
 	let username = $state('');
 	let birthDate = $state('');
-	let isPublic = $state(false)
-	let isEditing = $state(false)
-	let isLoading = $state(false)
+	let isPublic = $state(false);
+	let isEditing = $state(false);
+	let isLoading = $state(false);
 	let showLogoutModalOpen = $state(false);
+	let isDeleteAccountModalOpen = $state(false);
+	let accountError: string | null = $state(null);
 
 	$effect(() => {
-		const user = $auth.user
+		const user = $auth.user;
 
-		if (!user) return
+		if (!user) return;
 
-		isPublic = user.isPublic
+		isPublic = user.isPublic;
 
 		if (!isEditing) {
-			name = user.name
-			username = user.username ?? ''
-			birthDate = user.birthDate?.slice(0, 10) ?? ''
+			name = user.name;
+			username = user.username ?? '';
+			birthDate = user.birthDate?.slice(0, 10) ?? '';
 		}
-	})
+	});
 
 	const errors = $state({
 		name: '',
@@ -52,58 +54,51 @@
 		birthDate: '',
 		general: '',
 		isPublic: ''
-	})
+	});
 
 	async function acceptEditing() {
-		const trimmedUsername = username.trim()
-		errors.name = ''
-		errors.username = ''
+		const trimmedUsername = username.trim();
+		errors.name = '';
+		errors.username = '';
 		errors.birthDate = '';
-		errors.general = ''
+		errors.general = '';
 
 		if (birthDate) {
 			const today = new Date();
 
-			const maxBirthDate = new Date(
-				today.getFullYear() - 6,
-				today.getMonth(),
-				today.getDate()
-			);
+			const maxBirthDate = new Date(today.getFullYear() - 6, today.getMonth(), today.getDate());
 
 			const selectedDate = new Date(`${birthDate}T00:00:00`);
 
-			if (
-				Number.isNaN(selectedDate.getTime()) ||
-				selectedDate > maxBirthDate
-			) {
+			if (Number.isNaN(selectedDate.getTime()) || selectedDate > maxBirthDate) {
 				errors.birthDate = t('profile.errors.birthDate');
 				return;
 			}
 		}
 
 		if (name.trim().length < 2) {
-			errors.name = t('profile.errors.nameMin')
-			return
+			errors.name = t('profile.errors.nameMin');
+			return;
 		}
 
 		if (name.trim().length > 24) {
-			errors.name = t('profile.errors.nameMax')
-			return
+			errors.name = t('profile.errors.nameMax');
+			return;
 		}
 
 		if (trimmedUsername && trimmedUsername.length < 3) {
-			errors.username = t('profile.errors.usernameMin')
-			return 
+			errors.username = t('profile.errors.usernameMin');
+			return;
 		}
 
 		if (trimmedUsername && trimmedUsername.length > 24) {
-			errors.username = t('profile.errors.usernameMax')
-			return
+			errors.username = t('profile.errors.usernameMax');
+			return;
 		}
 
-		if (!(/^[a-zA-Z0-9_]*$/.test(trimmedUsername))) {
-			errors.username = t('profile.errors.usernameFormat')
-			return 
+		if (!/^[a-zA-Z0-9_]*$/.test(trimmedUsername)) {
+			errors.username = t('profile.errors.usernameFormat');
+			return;
 		}
 
 		try {
@@ -111,43 +106,43 @@
 				name: name.trim(),
 				username: username.trim() || null,
 				birthDate: birthDate || null
-			})
+			});
 
-			isEditing = false
+			isEditing = false;
 		} catch (err) {
 			if (err instanceof ApiError) {
 				if (err.status === 409) {
-					errors.username = t('profile.errors.usernameTaken')
-				}	
+					errors.username = t('profile.errors.usernameTaken');
+				}
 
-				if (err.status === 401){
-					errors.general = t('profile.errors.session')
+				if (err.status === 401) {
+					errors.general = t('profile.errors.session');
 				}
 
 				if (err.status === 400) {
-					errors.general = t('profile.errors.invalidData')
+					errors.general = t('profile.errors.invalidData');
 				}
 
 				if (err.status >= 500) {
-					errors.general = t('profile.errors.server')
+					errors.general = t('profile.errors.server');
 				}
 			}
 
 			if (!(err instanceof ApiError)) {
-				errors.general = t('profile.errors.general')
+				errors.general = t('profile.errors.general');
 			}
 		} finally {
-			isLoading = false
+			isLoading = false;
 		}
 	}
 
 	function cancelEditing() {
-		if (!$auth.user) return
+		if (!$auth.user) return;
 
-		name = $auth.user.name
-		username = $auth.user.username ?? ''
-		birthDate = $auth.user.birthDate?.slice(0, 10) ?? ''
-		isEditing = false
+		name = $auth.user.name;
+		username = $auth.user.username ?? '';
+		birthDate = $auth.user.birthDate?.slice(0, 10) ?? '';
+		isEditing = false;
 
 		errors.name = '';
 		errors.username = '';
@@ -156,32 +151,32 @@
 	}
 
 	async function changeProfileVisibility() {
-		if (!$auth.user) return 
+		if (!$auth.user) return;
 
-		const isPublicValue = $auth.user.isPublic
-		isLoading = true
-		errors.isPublic = ''
+		const isPublicValue = $auth.user.isPublic;
+		isLoading = true;
+		errors.isPublic = '';
 
 		try {
-			await auth.updateProfile({ isPublic })
+			await auth.updateProfile({ isPublic });
 		} catch (err) {
-			isPublic = isPublicValue
+			isPublic = isPublicValue;
 
 			if (err instanceof ApiError) {
-				if (err.status === 401){
-					errors.isPublic = t('profile.errors.session')
+				if (err.status === 401) {
+					errors.isPublic = t('profile.errors.session');
 				}
 
 				if (err.status === 400) {
-					errors.isPublic = t('profile.errors.invalidData')
+					errors.isPublic = t('profile.errors.invalidData');
 				}
 
 				if (err.status === 403) {
-					errors.isPublic = t('profile.errors.forbidden')
+					errors.isPublic = t('profile.errors.forbidden');
 				}
 
 				if (err.status >= 500) {
-					errors.isPublic = t('profile.errors.server')
+					errors.isPublic = t('profile.errors.server');
 				}
 
 				if (!errors.isPublic) {
@@ -190,16 +185,30 @@
 			}
 
 			if (!(err instanceof ApiError)) {
-				errors.isPublic = t('profile.errors.general')
+				errors.isPublic = t('profile.errors.general');
 			}
 		} finally {
-			isLoading = false
+			isLoading = false;
 		}
 	}
 
 	function handleLogout() {
 		auth.logout();
 		goto('/');
+	}
+
+	async function handleDeleteAccount() {
+		accountError = null;
+
+		const success = await auth.deleteAccount();
+
+		if (!success) {
+			accountError = $auth.error ?? 'Не удалось удалить аккаунт';
+			return;
+		}
+
+		isDeleteAccountModalOpen = false;
+		await goto('/');
 	}
 </script>
 
@@ -226,7 +235,7 @@
 		</div>
 	</section>
 
-	<div class="profile-layout" >
+	<div class="profile-layout">
 		<section class="profile-section personal-section" class:editing-border={isEditing}>
 			<div class="section-heading">
 				<h2>{t('profile.personal.title')}</h2>
@@ -236,7 +245,14 @@
 			<div class="form-grid">
 				<label>
 					<span>{t('profile.personal.name')}</span>
-					<input type="text" bind:value={name} disabled={!isEditing} aria-invalid={!!errors.name} aria-describedby={errors.name ? 'profile-name-error' : undefined} oninput={() => errors.name = ''}/>
+					<input
+						type="text"
+						bind:value={name}
+						disabled={!isEditing}
+						aria-invalid={!!errors.name}
+						aria-describedby={errors.name ? 'profile-name-error' : undefined}
+						oninput={() => (errors.name = '')}
+					/>
 					{#if errors.name}
 						<p id="profile-name-error" class="field-error" role="alert">{errors.name}</p>
 					{/if}
@@ -244,7 +260,15 @@
 
 				<label>
 					<span>{t('profile.personal.username')}</span>
-					<input type="text" bind:value={username} placeholder="@username" disabled={!isEditing} aria-invalid={!!errors.username} aria-describedby={errors.username ? 'profile-username-error' : undefined} oninput={() => errors.username = ''}/>
+					<input
+						type="text"
+						bind:value={username}
+						placeholder="@username"
+						disabled={!isEditing}
+						aria-invalid={!!errors.username}
+						aria-describedby={errors.username ? 'profile-username-error' : undefined}
+						oninput={() => (errors.username = '')}
+					/>
 					{#if errors.username}
 						<p id="profile-username-error" class="field-error" role="alert">{errors.username}</p>
 					{/if}
@@ -275,17 +299,19 @@
 
 			<div class="profile-actions">
 				{#if !isEditing}
-					<button type="button" class="secondary-action" onclick={() => isEditing = true} disabled={isLoading}>{t('common.edit')}</button>
-				{:else}
-					<button 
-						type="button" 
-						class="primary-action" 
-						onclick={acceptEditing}
-						disabled={isLoading}
+					<button
+						type="button"
+						class="secondary-action"
+						onclick={() => (isEditing = true)}
+						disabled={isLoading}>{t('common.edit')}</button
 					>
+				{:else}
+					<button type="button" class="primary-action" onclick={acceptEditing} disabled={isLoading}>
 						{isLoading ? t('profile.saving') : t('common.saveChanges')}
 					</button>
-					<button type="button" class="quiet-action" onclick={cancelEditing} disabled={isLoading}>{t('common.cancel')}</button>
+					<button type="button" class="quiet-action" onclick={cancelEditing} disabled={isLoading}
+						>{t('common.cancel')}</button
+					>
 				{/if}
 			</div>
 			{#if errors.general}
@@ -316,10 +342,10 @@
 			</div>
 
 			<label class="public-account-toggle">
-				<input 
-					type="checkbox" 
-					bind:checked={isPublic} 
-					onchange={changeProfileVisibility} 
+				<input
+					type="checkbox"
+					bind:checked={isPublic}
+					onchange={changeProfileVisibility}
 					disabled={isLoading}
 				/>
 				<span>{t('profile.account.public')}</span>
@@ -335,9 +361,16 @@
 				<button type="button" class="account-button">{t('profile.account.changeEmail')}</button>
 				<button type="button" class="account-button">{t('profile.account.changePassword')}</button>
 				<button type="button" class="account-button" onclick={() => (showLogoutModalOpen = true)}>
-				{t('settings.account.logout')}
-			</button>
-				<button type="button" class="account-button danger-action">
+					{t('settings.account.logout')}
+				</button>
+				<button
+					type="button"
+					class="account-button danger-action"
+					onclick={() => {
+						accountError = null;
+						isDeleteAccountModalOpen = true;
+					}}
+				>
 					{t('profile.account.delete')}
 				</button>
 			</div>
@@ -372,6 +405,19 @@
 		variant="danger"
 		onConfirm={handleLogout}
 		onCancel={() => (showLogoutModalOpen = false)}
+	/>
+{/if}
+
+{#if isDeleteAccountModalOpen}
+	<ConfirmModal
+		title={'Вы действительно хотите удалить аккаунт?'}
+		description={'Это действие нельзя отменить'}
+		confirmText={'Удалить'}
+		cancelText={'Отмена'}
+		variant="danger"
+		onConfirm={handleDeleteAccount}
+		onCancel={() => (isDeleteAccountModalOpen = false)}
+		error={accountError}
 	/>
 {/if}
 
