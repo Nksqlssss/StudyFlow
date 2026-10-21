@@ -29,6 +29,7 @@
 		const params = new URLSearchParams(urlHash);
 		const code = params.get('code');
 		const error = params.get('error');
+		const linked = params.get('linked');
 
 		window.history.replaceState(
 			window.history.state,
@@ -38,6 +39,8 @@
 
 		if (code) {
 			void exchangeGoogleCodeOnMount(code);
+		} else if (linked) {
+			void goto('/app/setting');
 		} else if (error) {
 			errorMessage = error;
 		} else {

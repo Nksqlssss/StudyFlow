@@ -2,11 +2,11 @@ import bcrypt from 'bcrypt'
 import type { FastifyInstance } from 'fastify'
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
+import type { PrismaClient } from '../generated/prisma/client.js'
 import { createEmailVerificationToken } from '../lib/email-verification.js'
 import { sendVerificationEmail } from '../lib/email.js'
 import { signAccessToken } from '../lib/jwt.js'
 import { prisma as defaultPrisma } from '../lib/prisma.js'
-import type { PrismaClient } from '../generated/prisma/client.js'
 import { publicUserSelect } from '../lib/user-select.js'
 import { authenticate } from '../middleware/authenticate.js'
 
@@ -29,11 +29,23 @@ const resendVerificationSchema = z.object({
 	email: z.string().email()
 })
 
-export async function authRoutes(app: FastifyInstance, options: {
-	db?: PrismaClient
-	sendVerification?: typeof sendVerificationEmail
-	authenticateUser?: typeof authenticate
-} = {}) {
+const setPasswordSchema = z.object({
+	password: z.string().min(8).max(72)
+})
+
+const changePasswordSchema = z.object({
+	currentPassword: z.string().min(1),
+	newPassword: z.string().min(8).max(72)
+})
+
+export async function authRoutes(
+	app: FastifyInstance,
+	options: {
+		db?: PrismaClient
+		sendVerification?: typeof sendVerificationEmail
+		authenticateUser?: typeof authenticate
+	} = {}
+) {
 	const prisma = options.db ?? defaultPrisma
 	const sendEmail = options.sendVerification ?? sendVerificationEmail
 	const authenticateUser = options.authenticateUser ?? authenticate
@@ -327,6 +339,137 @@ export async function authRoutes(app: FastifyInstance, options: {
 				accessToken,
 				user: publicUser
 			})
+		}
+	)
+
+	app.post(
+		'/auth/password',
+		{ preHandler: authenticate },
+		async (request, reply) => {
+			const result = setPasswordSchema.safeParse(request.body)
+
+			if (!result.success) {
+				return reply.status(400).send({
+					code: 'VALIDATION_ERROR',
+					message: 'Invalid request body',
+					issues: result.error.flatten()
+				})
+			}
+
+			const user = await prisma.user.findUnique({
+				where: {
+					id: request.user.id
+				},
+				select: {
+					passwordHash: true
+				}
+			})
+
+			if (!user) {
+				return reply.status(404).send({
+					code: 'USER_NOT_FOUND',
+					message: 'User not found'
+				})
+			}
+
+			if (user.passwordHash) {
+				return reply.status(409).send({
+					code: 'PASSWORD_ALREADY_SET',
+					message: 'Password already exists'
+				})
+			}
+
+			const passwordHash = await bcrypt.hash(result.data.password, 12)
+
+			const updated = await prisma.user.updateMany({
+				where: {
+					id: request.user.id,
+					passwordHash: null
+				},
+				data: {
+					passwordHash
+				}
+			})
+
+			if (updated.count === 0) {
+				return reply.status(409).send({
+					code: 'PASSWORD_ALREADY_SET',
+					message: 'Password already exists'
+				})
+			}
+
+			return reply.status(204).send()
+		}
+	)
+
+	app.patch(
+		'/auth/password',
+		{ preHandler: authenticate },
+		async (request, reply) => {
+			const result = changePasswordSchema.safeParse(request.body)
+
+			if (!result.success) {
+				return reply.status(400).send({
+					code: 'VALIDATION_ERROR',
+					message: 'Invalid request body',
+					issues: result.error.flatten()
+				})
+			}
+
+			const { currentPassword, newPassword } = result.data
+
+			const user = await prisma.user.findUnique({
+				where: {
+					id: request.user.id
+				},
+				select: {
+					passwordHash: true
+				}
+			})
+
+			if (!user) {
+				return reply.status(404).send({
+					code: 'USER_NOT_FOUND',
+					message: 'User not found'
+				})
+			}
+
+			if (!user.passwordHash) {
+				return reply.status(409).send({
+					code: 'PASSWORD_NOT_SET',
+					message: 'Password is not set'
+				})
+			}
+
+			const isValid = await bcrypt.compare(currentPassword, user.passwordHash)
+
+			if (!isValid) {
+				return reply.status(400).send({
+					code: 'INVALID_CURRENT_PASSWORD',
+					message: 'Current password is incorrect'
+				})
+			}
+
+			const passwordHash = await bcrypt.hash(newPassword, 12)
+
+			const updated = await prisma.user.updateMany({
+				where: {
+					id: request.user.id,
+					passwordHash: user.passwordHash
+				},
+				data: {
+					passwordHash
+				}
+			})
+
+			if (updated.count === 0) {
+				return reply.status(409).send({
+					code: 'PASSWORD_CHANGED',
+					message: 'Password was changed during this request'
+				})
+			}
+
+			return reply.status(204).send()
 		}
 	)
 

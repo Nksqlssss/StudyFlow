@@ -12,6 +12,18 @@ export type AuthUser = {
 	updatedAt: string;
 };
 
+export type GoogleProviders = {
+	google: {
+		connected: boolean;
+		email: string | null;
+	};
+};
+
+export type AuthMethodsResponse = {
+	hasPassword: boolean;
+	providers: GoogleProviders;
+};
+
 export type LoginBody = {
 	email: string;
 	password: string;
@@ -44,13 +56,25 @@ export type RegisterResponse = {
 	user: AuthUser;
 };
 
+export type AddGoogleAccountResponse = {
+	authorizationUrl: string;
+};
+
+export type setPasswordBody = {
+	password: string;
+};
+
+export type changePasswordBody = {
+	currentPassword: string;
+	newPassword: string;
+};
+
 export function login(data: LoginBody) {
 	return apiFetch<AuthResponse>('/auth/login', {
 		method: 'POST',
 		body: data
 	});
 }
-
 export function verifyEmail(token: string) {
 	return apiFetch<{ message: string }>('/auth/verify-email', {
 		method: 'POST',
@@ -80,6 +104,27 @@ export function exchangeGoogleCode(code: string) {
 	});
 }
 
+export function addGoogleAccount(token: string) {
+	return apiFetch<AddGoogleAccountResponse>('/auth/google/link', {
+		method: 'POST',
+		token,
+		credentials: 'include'
+	});
+}
+
+export function deleteGoogleAccount(token: string) {
+	return apiFetch<void>('/auth/google/link', {
+		method: 'DELETE',
+		token
+	});
+}
+
+export function getAuthMethods(token: string) {
+	return apiFetch<AuthMethodsResponse>('/auth/methods', {
+		token
+	});
+}
+
 export function getMe(token: string) {
 	return apiFetch<MeResponse>('/auth/me', {
 		token
@@ -88,6 +133,22 @@ export function getMe(token: string) {
 
 export function updateProfile(data: UpdateProfileBody, token: string) {
 	return apiFetch<MeResponse>('/users/me', {
+		method: 'PATCH',
+		body: data,
+		token
+	});
+}
+
+export function setPassword(data: setPasswordBody, token: string) {
+	return apiFetch<void>('/auth/password', {
+		method: 'POST',
+		body: data,
+		token
+	});
+}
+
+export function changePassword(data: changePasswordBody, token: string) {
+	return apiFetch<void>('/auth/password', {
 		method: 'PATCH',
 		body: data,
 		token
