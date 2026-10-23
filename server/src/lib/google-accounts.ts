@@ -1,5 +1,6 @@
 import { Prisma, type PrismaClient } from '../generated/prisma/client.js'
 import { GoogleAuthError, type GoogleIdentity } from './google-identity.js'
+import { lockReauthUser, ReauthError } from './reauth.js'
 import { publicUserSelect } from './user-select.js'
 
 async function accountTransaction<T>(
@@ -92,9 +93,22 @@ export function signInWithGoogle(db: PrismaClient, identity: GoogleIdentity) {
 export function linkGoogleAccount(
 	db: PrismaClient,
 	userId: string,
-	identity: GoogleIdentity
+	identity: GoogleIdentity,
+	binding: string
 ) {
 	return accountTransaction(db, async (tx) => {
+		try {
+			await lockReauthUser(tx, userId, binding)
+		} catch (error) {
+			if (error instanceof ReauthError) {
+				throw new GoogleAuthError(
+					error.status,
+					'GOOGLE_SESSION_EXPIRED',
+					'Sign in again before linking Google'
+				)
+			}
+			throw error
+		}
 		const user = await tx.user.findUnique({
 			where: { id: userId },
 			select: { id: true, emailVerifiedAt: true }

@@ -11,6 +11,8 @@ import { settingsRoutes } from './routes/settings.routes.js'
 import { subjectsRoutes } from './routes/subjects.routes.js'
 import { tasksRoutes } from './routes/tasks.routes.js'
 import { userRoutes } from './routes/users.routes.js'
+import { emailChangeRoutes } from './routes/email-change.routes.js'
+import { reauthRoutes } from './routes/reauth.routes.js'
 
 export function buildApp() {
 	const app = Fastify({
@@ -46,6 +48,8 @@ export function buildApp() {
 	app.register(tasksRoutes)
 	app.register(settingsRoutes)
 	app.register(userRoutes)
+	app.register(emailChangeRoutes)
+	app.register(reauthRoutes)
 
 	app.get('/health', async () => {
 		return {

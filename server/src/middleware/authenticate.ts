@@ -3,6 +3,7 @@ import { verifyAccessToken } from '../lib/jwt.js'
 import { prisma } from '../lib/prisma.js'
 import { publicUserSelect } from '../lib/user-select.js'
 import type { PrismaClient } from '../generated/prisma/client.js'
+import { sessionHash } from '../lib/session.js'
 
 export function createAuthenticate(db: PrismaClient) {
 	return async function authenticate(
@@ -26,6 +27,10 @@ export function createAuthenticate(db: PrismaClient) {
 			return reply.status(401).send({
 				message: 'Unauthorized'
 			})
+		}
+
+		if (await db.sessionRevocation.findUnique({ where: { sessionHash: sessionHash(authorization) } })) {
+			return reply.status(401).send({ message: 'Unauthorized' })
 		}
 
 		const user = await db.user.findUnique({

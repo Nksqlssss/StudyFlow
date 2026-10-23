@@ -15,6 +15,7 @@ import { signAccessToken, verifyAccessToken } from '../src/lib/jwt.js'
 import { hashOAuthSecret } from '../src/lib/google-identity.js'
 import { clientId, identityToken, TestGoogleClient } from './google-fixtures.js'
 import { createTestDatabase } from './test-database.js'
+import { reauthRoutes } from '../src/routes/reauth.routes.js'
 
 type Identity = { sub: string; email: string; name: string }
 type StartedFlow = { authorizationUrl: URL; cookies: string }
@@ -575,6 +576,20 @@ describe('Google OAuth with real PostgreSQL, PKCE and signed ID tokens', () => {
 			}),
 			1
 		)
+	})
+
+	test('a pending Google link cannot finish after the initiating session logs out', async () => {
+		const local = Fastify({ logger: false })
+		local.register(reauthRoutes, { db: database.db })
+		await local.ready()
+		try {
+			const a = await seedUser()
+			const flow = await start(a.token)
+			assert.equal((await local.inject({ method: 'POST', url: '/auth/logout', headers: { authorization: `Bearer ${a.token}` } })).statusCode, 204)
+			const result = await callback(flow, identity())
+			assert.equal(resultError(result), 'GOOGLE_SESSION_EXPIRED')
+			assert.equal(await database.db.oAuthAccount.count({ where: { userId: a.user.id } }), 0)
+		} finally { await local.close() }
 	})
 
 	test('link target comes only from JWT, never from callback query parameters', async () => {

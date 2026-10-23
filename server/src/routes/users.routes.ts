@@ -4,6 +4,8 @@ import { Prisma } from '../generated/prisma/client.js'
 import { prisma } from '../lib/prisma.js'
 import { publicUserSelect } from '../lib/user-select.js'
 import { authenticate } from '../middleware/authenticate.js'
+import type { PrismaClient } from '../generated/prisma/client.js'
+import { createAuthenticate } from '../middleware/authenticate.js'
 
 const updateUserSchema = z
 	.object({
@@ -23,11 +25,13 @@ const updateUserSchema = z
 		message: 'At least one field must be provided'
 	})
 
-export async function userRoutes(app: FastifyInstance) {
+export async function userRoutes(app: FastifyInstance, options: { db?: PrismaClient } = {}) {
+	const db = options.db ?? prisma
+	const authenticateUser = options.db ? createAuthenticate(db) : authenticate
 	;(app.patch(
 		'/users/me',
 		{
-			preHandler: authenticate
+			preHandler: authenticateUser
 		},
 		async (request, reply) => {
 			const body = updateUserSchema.safeParse(request.body)
@@ -52,7 +56,7 @@ export async function userRoutes(app: FastifyInstance) {
 			}
 
 			try {
-				const updatedUser = await prisma.user.update({
+				const updatedUser = await db.user.update({
 					where: {
 						id: request.user.id
 					},
@@ -78,12 +82,12 @@ export async function userRoutes(app: FastifyInstance) {
 		app.delete(
 			'/users/me',
 			{
-				preHandler: authenticate
+				preHandler: authenticateUser
 			},
 			async (request, reply) => {
 				const userId = request.user.id
 
-				const result = await prisma.user.deleteMany({
+				const result = await db.user.deleteMany({
 					where: {
 						id: userId
 					}

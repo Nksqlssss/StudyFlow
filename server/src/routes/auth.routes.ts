@@ -9,6 +9,8 @@ import { signAccessToken } from '../lib/jwt.js'
 import { prisma as defaultPrisma } from '../lib/prisma.js'
 import { publicUserSelect } from '../lib/user-select.js'
 import { authenticate } from '../middleware/authenticate.js'
+import { consumeReauthToken, lockReauthUser, ReauthError } from '../lib/reauth.js'
+import { sessionHash } from '../lib/session.js'
 
 const registerSchema = z.object({
 	email: z.string().email(),
@@ -30,8 +32,9 @@ const resendVerificationSchema = z.object({
 })
 
 const setPasswordSchema = z.object({
-	password: z.string().min(8).max(72)
-})
+	password: z.string().min(8).max(72),
+	reauthToken: z.string().regex(/^[a-f0-9]{64}$/).optional()
+}).strict()
 
 const changePasswordSchema = z.object({
 	currentPassword: z.string().min(1),
@@ -344,7 +347,7 @@ export async function authRoutes(
 
 	app.post(
 		'/auth/password',
-		{ preHandler: authenticate },
+		{ preHandler: authenticateUser, config: { rateLimit: { max: 5, timeWindow: '1 minute' } } },
 		async (request, reply) => {
 			const result = setPasswordSchema.safeParse(request.body)
 
@@ -379,32 +382,30 @@ export async function authRoutes(
 				})
 			}
 
-			const passwordHash = await bcrypt.hash(result.data.password, 12)
-
-			const updated = await prisma.user.updateMany({
-				where: {
-					id: request.user.id,
-					passwordHash: null
-				},
-				data: {
-					passwordHash
-				}
+			if (!result.data.reauthToken) return reply.status(403).send({
+				code: 'REAUTHENTICATION_REQUIRED', message: 'Email reauthentication is required to set a password'
 			})
-
-			if (updated.count === 0) {
-				return reply.status(409).send({
-					code: 'PASSWORD_ALREADY_SET',
-					message: 'Password already exists'
+			const token = result.data.reauthToken
+			const hash = sessionHash(request.headers.authorization!)
+			const passwordHash = await bcrypt.hash(result.data.password, 12)
+			try {
+				await prisma.$transaction(async tx => {
+					const current = await lockReauthUser(tx, request.user.id, hash)
+					if (current.passwordHash) throw new ReauthError(409, 'PASSWORD_ALREADY_SET', 'Password already exists')
+					await consumeReauthToken(tx, { userId: current.id, sessionHash: hash, purpose: 'set_password', token })
+					await tx.user.update({ where: { id: current.id }, data: { passwordHash } })
 				})
+				return reply.code(204).send()
+			} catch (error) {
+				if (error instanceof ReauthError) return reply.code(error.status).send({ code: error.code, message: error.message })
+				throw error
 			}
-
-			return reply.status(204).send()
 		}
 	)
 
 	app.patch(
 		'/auth/password',
-		{ preHandler: authenticate },
+		{ preHandler: authenticateUser },
 		async (request, reply) => {
 			const result = changePasswordSchema.safeParse(request.body)
 

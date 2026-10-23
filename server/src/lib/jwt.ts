@@ -1,4 +1,5 @@
-import jwt, { type SignOptions } from 'jsonwebtoken'
+import jwt, { type SignOptions, type JwtPayload } from 'jsonwebtoken'
+import { randomUUID } from 'node:crypto'
 import { env } from '../config/env.js'
 
 type AccessTokenPayload = {
@@ -9,10 +10,16 @@ const jwtExpiresIn = env.JWT_EXPIRES_IN as SignOptions['expiresIn'];
 
 export function signAccessToken(payload: AccessTokenPayload) {
   return jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: jwtExpiresIn
+    expiresIn: jwtExpiresIn,
+    jwtid: randomUUID()
   });
 }
 
 export function verifyAccessToken(token: string) {
-  return jwt.verify(token, env.JWT_SECRET) as AccessTokenPayload;
+  const payload = jwt.verify(token, env.JWT_SECRET);
+  if (typeof payload === 'string' || typeof payload.userId !== 'string' ||
+      typeof payload.exp !== 'number' || !Number.isSafeInteger(payload.exp)) {
+    throw new Error('Invalid access token');
+  }
+  return payload as AccessTokenPayload & JwtPayload & { exp: number };
 }

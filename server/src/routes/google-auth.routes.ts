@@ -21,6 +21,7 @@ import { signAccessToken } from '../lib/jwt.js'
 import { prisma } from '../lib/prisma.js'
 import { publicUserSelect } from '../lib/user-select.js'
 import { authenticate } from '../middleware/authenticate.js'
+import { sessionHash } from '../lib/session.js'
 
 export type GoogleOAuthConfig = {
 	clientId: string
@@ -248,6 +249,7 @@ export async function googleAuthRoutes(
 				codeChallenge,
 				intent,
 				userId: intent === 'link' ? request.user.id : null,
+				sessionHash: intent === 'link' ? sessionHash(request.headers.authorization!) : null,
 				expiresAt: new Date(Date.now() + FLOW_TTL_SECONDS * 1000)
 			}
 		})
@@ -341,7 +343,10 @@ export async function googleAuthRoutes(
 				flow.nonceHash
 			)
 			if (flow.intent === 'link' && flow.userId) {
-				await linkGoogleAccount(db, flow.userId, identity)
+				if (!flow.sessionHash) {
+					throw new GoogleAuthError(401, 'GOOGLE_SESSION_EXPIRED', 'Sign in again before linking Google')
+				}
+				await linkGoogleAccount(db, flow.userId, identity, flow.sessionHash)
 				return redirectResult(reply, { linked: 'google' })
 			}
 			const user = await signInWithGoogle(db, identity)

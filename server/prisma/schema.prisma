@@ -47,6 +47,11 @@ enum CompletedTasksVisibility {
   active_list
 }
 
+enum ReauthPurpose {
+  set_password
+  change_email
+}
+
 model User {
   id              String    @id @default(uuid())
   email           String    @unique
@@ -64,10 +69,14 @@ model User {
   settings                UserSettings?
   subjects                Subject[]
   tasks                   Task[]
-  emailVerificationTokens EmailVerificationToken[]
+  emailVerificationTokens  EmailVerificationToken[]
   oauthAccounts           OAuthAccount[]
   googleOAuthStates       GoogleOAuthState[]
   googleOAuthExchanges    GoogleOAuthExchange[]
+  emailChangeToken        EmailChangeToken?
+  reauthChallenge         ReauthChallenge?
+  reauthTokens            ReauthToken[]
+  sessionRevocations      SessionRevocation[]
 }
 
 model OAuthAccount {
@@ -92,6 +101,7 @@ model GoogleOAuthState {
   codeChallenge String
   intent        String
   userId        String?
+  sessionHash   String?
   expiresAt     DateTime
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -123,6 +133,59 @@ model EmailVerificationToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model EmailChangeToken {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  newEmail  String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ReauthChallenge {
+  userId                String        @id
+  purpose               ReauthPurpose
+  sessionHash           String
+  email                 String
+  nonce                 String
+  codeHash              String?
+  expiresAt             DateTime
+  lastSentAt            DateTime
+  sendWindowStartedAt   DateTime
+  sendCount             Int           @default(1)
+  attemptWindowStartedAt DateTime
+  failedAttempts        Int           @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ReauthToken {
+  tokenHash   String        @id
+  userId      String
+  purpose     ReauthPurpose
+  sessionHash String
+  email       String
+  expiresAt   DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model SessionRevocation {
+  sessionHash String   @id
+  userId      String
+  expiresAt   DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model UserSettings {
