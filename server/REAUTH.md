@@ -172,7 +172,8 @@ old auth session cannot update the current interface.
 
 Pending Google linking is also bound to the initiating session hash. A Google
 callback after server logout cannot finish linking, even if its state cookie has
-not expired. Apply `20261023133000_bind_google_link_session` for this binding.
+not expired. Linking state cannot outlive its initiating JWT either.
+Apply `20261023133000_bind_google_link_session` for this binding.
 
 ## Deployment and checks
 

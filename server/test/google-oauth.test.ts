@@ -16,6 +16,8 @@ import { hashOAuthSecret } from '../src/lib/google-identity.js'
 import { clientId, identityToken, TestGoogleClient } from './google-fixtures.js'
 import { createTestDatabase } from './test-database.js'
 import { reauthRoutes } from '../src/routes/reauth.routes.js'
+import jwt from 'jsonwebtoken'
+import { env } from '../src/config/env.js'
 
 type Identity = { sub: string; email: string; name: string }
 type StartedFlow = { authorizationUrl: URL; cookies: string }
@@ -576,6 +578,15 @@ describe('Google OAuth with real PostgreSQL, PKCE and signed ID tokens', () => {
 			}),
 			1
 		)
+	})
+
+	test('Google linking cannot outlive the initiating JWT', async () => {
+		const a = await seedUser()
+		const token = jwt.sign({ userId: a.user.id }, env.JWT_SECRET, { expiresIn: 60 })
+		const flow = await start(token)
+		const stateHash = hashOAuthSecret(flow.authorizationUrl.searchParams.get('state')!)
+		const record = await database.db.googleOAuthState.findUniqueOrThrow({ where: { stateHash } })
+		assert.equal(record.expiresAt.getTime(), verifyAccessToken(token).exp * 1000)
 	})
 
 	test('a pending Google link cannot finish after the initiating session logs out', async () => {

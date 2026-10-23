@@ -17,7 +17,7 @@ import {
 	sameOAuthSecret,
 	verifyGoogleIdentity
 } from '../lib/google-identity.js'
-import { signAccessToken } from '../lib/jwt.js'
+import { signAccessToken, verifyAccessToken } from '../lib/jwt.js'
 import { prisma } from '../lib/prisma.js'
 import { publicUserSelect } from '../lib/user-select.js'
 import { authenticate } from '../middleware/authenticate.js'
@@ -240,6 +240,10 @@ export async function googleAuthRoutes(
 		)
 		const browser = randomSecret()
 		const nonce = randomSecret()
+		const expiresAt = Date.now() + FLOW_TTL_SECONDS * 1000
+		const sessionExpiresAt = intent === 'link'
+			? verifyAccessToken(request.headers.authorization!.slice(7)).exp * 1000
+			: expiresAt
 		authorizationUrl.searchParams.set('nonce', nonce)
 		await db.googleOAuthState.create({
 			data: {
@@ -250,7 +254,7 @@ export async function googleAuthRoutes(
 				intent,
 				userId: intent === 'link' ? request.user.id : null,
 				sessionHash: intent === 'link' ? sessionHash(request.headers.authorization!) : null,
-				expiresAt: new Date(Date.now() + FLOW_TTL_SECONDS * 1000)
+				expiresAt: new Date(Math.min(expiresAt, sessionExpiresAt))
 			}
 		})
 		reply.setCookie(browserCookie, browser, cookieOptions)
