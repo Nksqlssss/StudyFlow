@@ -10,10 +10,13 @@
 	import EmailChangeModal from './EmailChangeModal.svelte';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 
-	let { showEmail = true, showHeading = true } = $props<{
+	let {
+		showEmail = true,
+		showHeading = true
+	}: {
 		showEmail?: boolean;
 		showHeading?: boolean;
-	}>();
+	} = $props();
 	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
 		translate($settings.language, key, params)
 	);
@@ -225,13 +228,29 @@
 	>
 {:else}
 	<div class="method-row">
-		<div>
-			<h3>{t('settings.signIn.password')}</h3>
-			<p>
-				{t(
-					$auth.methods.hasPassword ? 'settings.signIn.connected' : 'settings.signIn.notConnected'
-				)}
-			</p>
+		<div class="provider">
+			<svg
+				width="28"
+				height="28"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.8"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<rect x="4" y="10" width="16" height="11" rx="2" />
+				<path d="M7 10V7a5 5 0 0 1 10 0v3M12 14v3" />
+			</svg>
+			<div>
+				<h3>{t('settings.signIn.password')}</h3>
+				<p>
+					{t(
+						$auth.methods.hasPassword ? 'settings.signIn.connected' : 'settings.signIn.notConnected'
+					)}
+				</p>
+			</div>
 		</div>
 		<button
 			type="button"
@@ -393,7 +412,8 @@
 		align-items: center;
 		gap: 16px;
 	}
-	.provider img {
+	.provider img,
+	.provider svg {
 		flex-shrink: 0;
 	}
 	.provider > div {
