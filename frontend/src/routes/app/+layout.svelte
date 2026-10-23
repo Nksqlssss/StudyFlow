@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import BottomTabbar from '$lib/components/ui/bottomTabbar.svelte';
 	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
@@ -12,7 +13,7 @@
 		if ($auth.isLoading) return;
 
 		if (!$auth.token || !$auth.user) {
-			goto('/login');
+			void goto(resolve('/login'));
 			return;
 		}
 

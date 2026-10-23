@@ -5,6 +5,7 @@
 	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
 	import { onMount } from 'svelte';
+	import { accountErrorKey } from '$lib/i18n/account-errors';
 
 	const t = $derived((key: TranslationKey) => translate($settings.language, key));
 
@@ -17,9 +18,13 @@
 		const success = await auth.loginWithGoogle(code);
 
 		if (success) {
-			await goto('/app');
+			if (window.opener) {
+				window.opener.postMessage({ type: 'studyflow:google-login' }, window.location.origin);
+				window.close();
+			}
+			await goto(resolve('/app'));
 		} else {
-			errorMessage = $auth.error ?? 'Google authorization failed';
+			errorMessage = $auth.errorCode ?? 'UNKNOWN';
 			isProcessing = false;
 		}
 	}
@@ -40,7 +45,7 @@
 		if (code) {
 			void exchangeGoogleCodeOnMount(code);
 		} else if (linked) {
-			void goto('/app/setting');
+			void goto(resolve('/app/profile'));
 		} else if (error) {
 			errorMessage = error;
 		} else {
@@ -85,7 +90,7 @@
 
 		{#if errorMessage}
 			<p class="error-message" role="alert">
-				{t('auth.google.callback.errorHint')}
+				{t(accountErrorKey(null, errorMessage))}
 			</p>
 			<a class="login-link" href={resolve('/login')}>{t('auth.verify.backToLogin')}</a>
 		{:else}

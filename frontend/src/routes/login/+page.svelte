@@ -5,16 +5,40 @@
 	import { translate, type TranslationKey } from '$lib/i18n';
 	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
+	import { pendingEmailChange } from '$lib/stores/pendingEmailChange';
+	import { PUBLIC_API_URL } from '$env/static/public';
+	import { onMount } from 'svelte';
 
 	let email = $state('');
 	let password = $state('');
 	let verificationEmail = $state('');
+	let googlePopup: Window | null = null;
+	let popupError = $state(false);
+	onMount(() => {
+		const receive = async (event: MessageEvent<unknown>) => {
+			if (
+				event.origin !== window.location.origin ||
+				event.source !== googlePopup ||
+				!event.data ||
+				typeof event.data !== 'object' ||
+				!('type' in event.data) ||
+				event.data.type !== 'studyflow:google-login'
+			)
+				return;
+			googlePopup = null;
+			await auth.loadMe();
+			if ($auth.user) await goto(resolve('/app/profile'));
+		};
+		window.addEventListener('message', receive);
+		return () => window.removeEventListener('message', receive);
+	});
 	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
 		translate($settings.language, key, params)
 	);
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
+		if ($auth.isLoading) return;
 
 		verificationEmail = email.trim();
 
@@ -24,12 +48,17 @@
 		});
 
 		if (!$auth.error) {
-			goto('/app');
+			if ($pendingEmailChange) await goto(resolve('/app/profile'));
+			else await goto(resolve('/app'));
 		}
 	}
 
 	function handleGoogleLogin() {
-		window.location.assign('http://localhost:3000/auth/google');
+		const url = `${PUBLIC_API_URL}/auth/google`;
+		if ($pendingEmailChange) {
+			googlePopup = window.open(url, 'studyflow-account-login', 'width=540,height=720');
+			popupError = !googlePopup;
+		} else window.location.assign(url);
 	}
 </script>
 
@@ -58,6 +87,10 @@
 				<h2>{t('auth.login.formTitle')}</h2>
 				<p>{t('auth.login.formDescription')}</p>
 			</div>
+			{#if $pendingEmailChange}<p class="verification-notice" role="status">
+					{t('account.signInToConfirm')}
+				</p>{/if}
+			{#if popupError}<p class="error-message" role="alert">{t('account.popupBlocked')}</p>{/if}
 
 			<button type="button" class="google-button" onclick={handleGoogleLogin}>
 				<img src="/icons/google.svg" alt="" width="20" height="20" />

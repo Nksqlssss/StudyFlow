@@ -1,5 +1,5 @@
 <script lang="ts">
-	import PasswordModal from '$lib/components/auth/PasswordModal.svelte';
+	import AccountSecurity from '$lib/components/auth/AccountSecurity.svelte';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { priorityLabel, translate, type TranslationKey } from '$lib/i18n';
@@ -8,22 +8,13 @@
 	import { subjects } from '$lib/stores/subjects';
 	import { tasks } from '$lib/stores/tasks';
 	import type { TaskPriority } from '$lib/types';
-	import { onMount } from 'svelte';
 
 	let showClearAllModal = $state(false);
 	let showClearTasksModal = $state(false);
 	let showResetSettingsModal = $state(false);
 	let showModal = $state(false);
 	let actionLoading = $state(false);
-	let isSetPasswordModalOpen = $state(false);
-	let isChangePasswordModalOpen = $state(false);
 	let actionError: string | null = $state(null);
-	let password = $state('');
-	let confirmPassword = $state('');
-	let currentPassword = $state('');
-	let newPassword = $state('');
-	let confirmNewPassword = $state('');
-	let passwordModalError: string | null = $state(null);
 	const t = $derived((key: TranslationKey, params: Record<string, string | number> = {}) =>
 		translate($settings.language, key, params)
 	);
@@ -47,7 +38,8 @@
 			'Password change failed': 'settings.password.errors.save',
 			'Google linking failed': 'settings.signIn.errors.connect',
 			'Google unlinking failed': 'settings.signIn.errors.disconnect',
-			'Set a password and verify your email before unlinking Google': 'settings.signIn.passwordRequired',
+			'Set a password and verify your email before unlinking Google':
+				'settings.signIn.passwordRequired',
 			'Invalid request body': 'profile.errors.invalidData',
 			'Failed to fetch': 'settings.errors.network',
 			'NetworkError when attempting to fetch resource.': 'settings.errors.network',
@@ -57,10 +49,6 @@
 
 		return t(keys[message] ?? 'common.somethingWentWrong');
 	}
-
-	onMount(() => {
-		void auth.loadMethods();
-	});
 
 	function modalToggle() {
 		showModal = !showModal;
@@ -126,82 +114,6 @@
 		} finally {
 			actionLoading = false;
 		}
-	}
-
-	async function handleAddGoogle() {
-		const result = await auth.addGoogle();
-
-		if (!result) return;
-
-		window.location.assign(result.authorizationUrl);
-	}
-
-	async function handleDeleteGoogle() {
-		await auth.deleteGoogle();
-	}
-
-	async function handleSetPassword() {
-		passwordModalError = null;
-
-		if (!password || !confirmPassword) {
-			passwordModalError = t('settings.password.errors.required');
-			return;
-		}
-
-		if (password.length < 8 || password.length > 72) {
-			passwordModalError = t('settings.password.errors.length');
-			return;
-		}
-
-		if (password !== confirmPassword) {
-			passwordModalError = t('settings.password.errors.match');
-			return;
-		}
-
-		const success = await auth.createPassword({ password });
-
-		if (!success) return;
-
-		isSetPasswordModalOpen = false;
-		passwordModalError = null;
-		password = '';
-		confirmPassword = '';
-	}
-
-	async function handleChangePassword() {
-		passwordModalError = null;
-
-		if (!currentPassword || !newPassword) {
-			passwordModalError = t('settings.password.errors.required');
-			return;
-		}
-
-		if (newPassword.length < 8 || newPassword.length > 72) {
-			passwordModalError = t('settings.password.errors.length');
-			return;
-		}
-
-		if (currentPassword === newPassword) {
-			passwordModalError = t('settings.password.errors.different');
-			return;
-		}
-
-		if (newPassword !== confirmNewPassword || !confirmNewPassword) {
-			passwordModalError = t('settings.password.errors.confirmNew');
-			return;
-		}
-
-		const success = await auth.changePassword({
-			currentPassword,
-			newPassword
-		});
-
-		if (!success) return;
-
-		isChangePasswordModalOpen = false;
-		passwordModalError = null;
-		newPassword = '';
-		confirmNewPassword = '';
 	}
 </script>
 
@@ -460,131 +372,9 @@
 		</div>
 	</section>
 
-	{#if $auth.isMethodsLoading}
-		<section class="settings-section methods-state" aria-busy="true">
-			<div class="section-heading"><h2>{t('settings.signIn.title')}</h2></div>
-			<p class="methods-loading" role="status"><span class="spinner" aria-hidden="true"></span>{t('settings.signIn.loading')}</p>
-		</section>
-	{:else if !$auth.methods}
-		<section class="settings-section methods-state">
-			<div class="section-heading"><h2>{t('settings.signIn.title')}</h2></div>
-			<p class="error-text" role="alert">{t('settings.signIn.errors.load')}</p>
-			<button type="button" class="retry-action" onclick={() => void auth.loadMethods()}>{t('auth.verify.retry')}</button>
-		</section>
-	{:else}
-		<section class="settings-section login-methods" aria-labelledby="login-methods-title">
-			<div class="section-heading methods-heading">
-				<div>
-					<h2 id="login-methods-title">{t('settings.signIn.title')}</h2>
-					<p>{t('settings.signIn.description')}</p>
-				</div>
-				<svg
-					class="security-icon"
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.8"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					aria-hidden="true"
-				>
-					<path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6l-8-3Z" />
-					<path d="m9 12 2 2 4-5" />
-				</svg>
-			</div>
-
-			<div class="method-row">
-				<div class="method-info">
-					<span class="method-icon" aria-hidden="true">
-						<svg
-							width="24"
-							height="24"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.8"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<rect x="4" y="10" width="16" height="11" rx="2" />
-							<path d="M7 10V7a5 5 0 0 1 10 0v3M12 14v3" />
-						</svg>
-					</span>
-					<div class="method-copy">
-						<h3>{t('settings.signIn.password')}</h3>
-						{#if $auth.methods.hasPassword}
-							<p>{t('settings.signIn.connected')}</p>
-						{:else}
-							<p>{t('settings.signIn.notConnected')}</p>
-						{/if}
-					</div>
-				</div>
-				{#if $auth.methods.hasPassword}
-					<button
-						type="button"
-						class="method-action"
-						onclick={() => (isChangePasswordModalOpen = true)}
-						disabled={$auth.isPasswordLoading}
-						>{$auth.isPasswordLoading
-							? t('settings.password.updating')
-							: t('settings.signIn.change')}</button
-					>
-				{:else}
-					<button
-						type="button"
-						class="method-action"
-						onclick={() => (isSetPasswordModalOpen = true)}
-						disabled={$auth.isPasswordLoading}
-						>{$auth.isPasswordLoading
-							? t('settings.password.setting')
-							: t('settings.password.set')}</button
-					>
-				{/if}
-			</div>
-
-			<div class="method-row">
-				<div class="method-info">
-					<span class="method-icon" aria-hidden="true">
-						<img src="/icons/google.svg" alt="" width="28" height="28" />
-					</span>
-					<div class="method-copy">
-						<h3>Google</h3>
-						{#if $auth.methods.providers.google.connected}
-							<p class="method-email">{$auth.methods.providers.google.email}</p>
-						{:else}
-							<p>{t('settings.signIn.notConnected')}</p>
-						{/if}
-					</div>
-				</div>
-				{#if $auth.methods.providers.google.connected}
-					<button
-						type="button"
-						class="method-action danger-action"
-						onclick={handleDeleteGoogle}
-						disabled={$auth.isAccountLoading || !$auth.methods.hasPassword}
-					>
-						{$auth.isAccountLoading ? t('settings.signIn.disconnecting') : t('settings.signIn.disconnect')}
-					</button>
-				{:else}
-					<button
-						type="button"
-						class="method-action connect-action"
-						onclick={handleAddGoogle}
-						disabled={$auth.isAccountLoading || $auth.methods.providers.google.connected}
-						>{$auth.isAccountLoading ? t('settings.signIn.connecting') : t('settings.signIn.connect')}</button
-					>
-				{/if}
-			</div>
-			{#if !$auth.methods.hasPassword}
-				<p class="method-hint">{t('settings.signIn.passwordHint')}</p>
-			{/if}
-			{#if $auth.accountError}
-				<p class="error-text" role="alert">{errorText($auth.accountError)}</p>
-			{/if}
-		</section>
-	{/if}
+	<section class="settings-section">
+		<AccountSecurity showEmail={false} />
+	</section>
 
 	<section class="settings-section about-section">
 		<div class="section-heading">
@@ -599,31 +389,6 @@
 		</div>
 	</section>
 </main>
-
-{#if isSetPasswordModalOpen}
-	<PasswordModal
-		mode="set"
-		onClose={() => (isSetPasswordModalOpen = false)}
-		bind:firstValue={password}
-		bind:secondValue={confirmPassword}
-		error={passwordModalError ?? ($auth.passwordError ? errorText($auth.passwordError) : null)}
-		onConfirm={handleSetPassword}
-		isLoading={$auth.isPasswordLoading}
-	/>
-{/if}
-
-{#if isChangePasswordModalOpen}
-	<PasswordModal
-		mode="change"
-		onClose={() => (isChangePasswordModalOpen = false)}
-		bind:firstValue={currentPassword}
-		bind:secondValue={newPassword}
-		bind:thirdValue={confirmNewPassword}
-		error={passwordModalError ?? ($auth.passwordError ? errorText($auth.passwordError) : null)}
-		onConfirm={handleChangePassword}
-		isLoading={$auth.isPasswordLoading}
-	/>
-{/if}
 
 {#if showClearTasksModal}
 	<ConfirmModal
@@ -879,128 +644,6 @@
 		border-color: var(--state-danger-soft-border);
 		background-color: var(--state-danger-soft-bg);
 		color: var(--state-danger-soft-text);
-	}
-
-	.methods-heading {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 16px;
-	}
-
-	.security-icon {
-		flex-shrink: 0;
-		color: var(--text-secondary);
-	}
-
-	.method-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 16px;
-		min-width: 0;
-		padding-top: 20px;
-		border-top: 1px solid var(--border-primary);
-	}
-
-	.method-info {
-		display: flex;
-		align-items: center;
-		gap: 16px;
-		min-width: 0;
-	}
-
-	.method-icon {
-		display: grid;
-		place-items: center;
-		flex: 0 0 40px;
-		width: 40px;
-		height: 40px;
-		color: var(--text-primary);
-	}
-
-	.method-copy {
-		min-width: 0;
-		overflow-wrap: anywhere;
-	}
-
-	.method-copy h3 {
-		margin-bottom: 4px;
-		font-size: 16px;
-	}
-
-	.method-copy p {
-		color: var(--text-secondary);
-		font-size: 14px;
-		line-height: 1.5;
-	}
-
-	.method-action {
-		flex-shrink: 0;
-		background: transparent;
-	}
-
-	.method-action.danger-action {
-		background: var(--state-danger-soft-bg);
-	}
-
-	.methods-loading {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		color: var(--text-secondary);
-		font-size: 14px;
-		line-height: 1.5;
-	}
-
-	.spinner {
-		flex: 0 0 20px;
-		width: 20px;
-		height: 20px;
-		border: 2px solid var(--border-secondary);
-		border-top-color: var(--accent-primary);
-		border-radius: 50%;
-		animation: spin 0.9s linear infinite;
-	}
-
-	.methods-state .error-text,
-	.login-methods .error-text {
-		margin: 0;
-	}
-
-	.retry-action { justify-self: start; }
-
-	.method-hint {
-		padding: 12px 14px;
-		border-radius: 8px;
-		background: var(--surface-input);
-		color: var(--text-secondary);
-		font-size: 13px;
-		line-height: 1.6;
-	}
-
-	.method-email { overflow-wrap: anywhere; }
-
-	.method-action { max-width: 100%; }
-	.settings-section { min-width: 0; }
-
-	@keyframes spin { to { transform: rotate(360deg); } }
-	@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
-
-	.connect-action {
-		border-color: transparent;
-		background: var(--gradient-primary);
-		color: var(--text-on-accent);
-	}
-
-	@media (max-width: 479px) {
-		.method-row {
-			flex-wrap: wrap;
-		}
-
-		.method-action {
-			width: 100%;
-		}
 	}
 
 	.about-list {

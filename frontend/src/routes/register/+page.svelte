@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { PUBLIC_API_URL } from '$env/static/public';
 	import ResendVerification from '$lib/components/auth/ResendVerification.svelte';
 	import { translate, type TranslationKey } from '$lib/i18n';
 	import { auth } from '$lib/stores/auth';
@@ -40,7 +41,7 @@
 	}
 
 	function handleGoogleRegister() {
-		window.location.assign('http://localhost:3000/auth/google');
+		window.location.assign(`${PUBLIC_API_URL}/auth/google`);
 	}
 </script>
 

@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { ApiError } from '$lib/api/client';
+	import AccountSecurity from '$lib/components/auth/AccountSecurity.svelte';
+	import { resolve } from '$app/paths';
+	import { pendingEmailChange } from '$lib/stores/pendingEmailChange';
+	import { accountErrorKey } from '$lib/i18n/account-errors';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import { formatLongDate, translate, type TranslationKey } from '$lib/i18n';
 	import { auth } from '$lib/stores/auth';
@@ -33,7 +37,46 @@
 	let showLogoutModalOpen = $state(false);
 	let isDeleteAccountModalOpen = $state(false);
 	let accountError: string | null = $state(null);
+	let confirmationBusy = $state(false);
+	let confirmationError = $state<TranslationKey | null>(null);
+	let confirmationSuccess = $state(false);
+	let attemptedConfirmation = $state('');
 
+	$effect(() => {
+		const token = $pendingEmailChange;
+		const user = $auth.user;
+		if (!user) {
+			attemptedConfirmation = '';
+			return;
+		}
+		if (!token || $auth.isLoading || $auth.isAccountLoading || confirmationBusy) return;
+		const attempt = `${user.id}:${token}`;
+		if (attemptedConfirmation === attempt) return;
+		attemptedConfirmation = attempt;
+		void confirmNewEmail();
+	});
+
+	async function confirmNewEmail() {
+		const token = $pendingEmailChange;
+		if (!token || confirmationBusy) return;
+		confirmationBusy = true;
+		confirmationError = null;
+		try {
+			if (await auth.confirmEmailChange(token)) {
+				pendingEmailChange.set(null);
+				confirmationSuccess = true;
+			} else confirmationError = accountErrorKey($auth.accountError, $auth.errorCode);
+		} finally {
+			confirmationBusy = false;
+		}
+	}
+
+	async function switchConfirmationAccount() {
+		const token = $pendingEmailChange;
+		await auth.logout();
+		pendingEmailChange.set(token);
+		await goto(resolve('/login'));
+	}
 	$effect(() => {
 		const user = $auth.user;
 
@@ -192,9 +235,9 @@
 		}
 	}
 
-	function handleLogout() {
-		auth.logout();
-		goto('/');
+	async function handleLogout() {
+		await auth.logout();
+		await goto(resolve('/'));
 	}
 
 	async function handleDeleteAccount() {
@@ -203,12 +246,12 @@
 		const success = await auth.deleteAccount();
 
 		if (!success) {
-			accountError = $auth.error ?? 'Не удалось удалить аккаунт';
+			accountError = t(accountErrorKey($auth.error, $auth.errorCode));
 			return;
 		}
 
 		isDeleteAccountModalOpen = false;
-		await goto('/');
+		await goto(resolve('/'));
 	}
 </script>
 
@@ -222,6 +265,23 @@
 			{t('profile.description')}
 		</p>
 	</header>
+	{#if confirmationBusy}<p class="confirmation-message" role="status">
+			{t('account.confirmingEmail')}
+		</p>{/if}
+	{#if confirmationSuccess}<p class="confirmation-message" role="status">
+			{t('account.emailConfirmed')}
+		</p>{/if}
+	{#if confirmationError}
+		<div class="confirmation-message">
+			<p class="error-message" role="alert">{t(confirmationError)}</p>
+			<button type="button" onclick={confirmNewEmail} disabled={confirmationBusy}
+				>{t('auth.verify.retry')}</button
+			>
+			<button type="button" onclick={switchConfirmationAccount} disabled={confirmationBusy}
+				>{t('account.switchAccount')}</button
+			>
+		</div>
+	{/if}
 
 	<section class="profile-section user-card">
 		<div class="avatar-wrap">
@@ -357,9 +417,8 @@
 				<p class="error-message" role="alert">{errors.isPublic}</p>
 			{/if}
 
+			<AccountSecurity showHeading={false} />
 			<div class="account-actions">
-				<button type="button" class="account-button">{t('profile.account.changeEmail')}</button>
-				<button type="button" class="account-button">{t('profile.account.changePassword')}</button>
 				<button type="button" class="account-button" onclick={() => (showLogoutModalOpen = true)}>
 					{t('settings.account.logout')}
 				</button>
@@ -410,10 +469,10 @@
 
 {#if isDeleteAccountModalOpen}
 	<ConfirmModal
-		title={'Вы действительно хотите удалить аккаунт?'}
-		description={'Это действие нельзя отменить'}
-		confirmText={'Удалить'}
-		cancelText={'Отмена'}
+		title={t('account.deleteTitle')}
+		description={t('common.deleteIrreversible')}
+		confirmText={t('common.delete')}
+		cancelText={t('common.cancel')}
 		variant="danger"
 		onConfirm={handleDeleteAccount}
 		onCancel={() => (isDeleteAccountModalOpen = false)}
@@ -422,6 +481,16 @@
 {/if}
 
 <style>
+	.confirmation-message {
+		display: grid;
+		gap: 12px;
+		margin-bottom: 20px;
+		padding: 16px;
+		border: 1px solid var(--border-accent);
+		border-radius: 14px;
+		background: var(--surface-primary);
+		color: var(--text-primary);
+	}
 	.profile-section.editing-border {
 		border-color: var(--border-accent);
 	}

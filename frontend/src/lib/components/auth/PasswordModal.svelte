@@ -2,6 +2,7 @@
 	import { translate, type TranslationKey } from '$lib/i18n';
 	import { settings } from '$lib/stores/settings';
 	import { onMount } from 'svelte';
+	import type { Snippet } from 'svelte';
 
 	let {
 		mode,
@@ -11,7 +12,9 @@
 		secondValue = $bindable(''),
 		thirdValue = $bindable(''),
 		error,
-		isLoading = false
+		isLoading = false,
+		verification,
+		canConfirm = true
 	}: {
 		mode: 'set' | 'change';
 		onClose: () => void;
@@ -21,6 +24,8 @@
 		thirdValue?: string;
 		error: string | null;
 		isLoading?: boolean;
+		verification?: Snippet;
+		canConfirm?: boolean;
 	} = $props();
 	const t = $derived((key: TranslationKey) => translate($settings.language, key));
 	let dialog: HTMLDialogElement;
@@ -36,7 +41,7 @@
 
 	async function handleConfirm(event: SubmitEvent) {
 		event.preventDefault();
-		if (busy) return;
+		if (busy || !canConfirm) return;
 
 		isPending = true;
 		confirmationFailed = false;
@@ -88,106 +93,115 @@
 	</p>
 
 	<form onsubmit={handleConfirm}>
-	<div class="fields">
-		<div class="field">
-			<label for="password-first"
-				>{t(mode === 'set' ? 'settings.signIn.password' : 'settings.password.current')}</label
-			>
-			<div class="password-input">
-				<input
-					id="password-first"
-					name={mode === 'set' ? 'password' : 'currentPassword'}
-					type={showFirst ? 'text' : 'password'}
-					autocomplete={mode === 'set' ? 'new-password' : 'current-password'}
-					placeholder={t('auth.login.passwordPlaceholder')}
-					bind:value={firstValue}
-					disabled={busy}
-				/>
-				<button
-					class="visibility"
-					type="button"
-					onclick={() => (showFirst = !showFirst)}
-					aria-label={t(showFirst ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
-					title={t(showFirst ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
-					aria-pressed={showFirst}
-					disabled={busy}
+		{@render verification?.()}
+		<div class="fields">
+			<div class="field">
+				<label for="password-first"
+					>{t(mode === 'set' ? 'settings.signIn.password' : 'settings.password.current')}</label
 				>
-					{@render visibilityIcon(showFirst)}
-				</button>
+				<div class="password-input">
+					<input
+						id="password-first"
+						name={mode === 'set' ? 'password' : 'currentPassword'}
+						type={showFirst ? 'text' : 'password'}
+						autocomplete={mode === 'set' ? 'new-password' : 'current-password'}
+						placeholder={t('auth.login.passwordPlaceholder')}
+						bind:value={firstValue}
+						disabled={busy}
+					/>
+					<button
+						class="visibility"
+						type="button"
+						onclick={() => (showFirst = !showFirst)}
+						aria-label={t(showFirst ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
+						title={t(showFirst ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
+						aria-pressed={showFirst}
+						disabled={busy}
+					>
+						{@render visibilityIcon(showFirst)}
+					</button>
+				</div>
+			</div>
+			<div class="field">
+				<label for="password-second"
+					>{t(mode === 'set' ? 'settings.password.confirm' : 'settings.password.new')}</label
+				>
+				<div class="password-input">
+					<input
+						id="password-second"
+						name={mode === 'set' ? 'confirmPassword' : 'newPassword'}
+						type={showSecond ? 'text' : 'password'}
+						autocomplete="new-password"
+						placeholder={t(
+							mode === 'set'
+								? 'settings.password.confirmPlaceholder'
+								: 'auth.form.passwordPlaceholder'
+						)}
+						bind:value={secondValue}
+						disabled={busy}
+					/>
+					<button
+						class="visibility"
+						type="button"
+						onclick={() => (showSecond = !showSecond)}
+						aria-label={t(showSecond ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
+						title={t(showSecond ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
+						aria-pressed={showSecond}
+						disabled={busy}
+					>
+						{@render visibilityIcon(showSecond)}
+					</button>
+				</div>
 			</div>
 		</div>
-		<div class="field">
-			<label for="password-second"
-				>{t(mode === 'set' ? 'settings.password.confirm' : 'settings.password.new')}</label
-			>
-			<div class="password-input">
-				<input
-					id="password-second"
-					name={mode === 'set' ? 'confirmPassword' : 'newPassword'}
-					type={showSecond ? 'text' : 'password'}
-					autocomplete="new-password"
-					placeholder={t(
-						mode === 'set'
-							? 'settings.password.confirmPlaceholder'
-							: 'auth.form.passwordPlaceholder'
-					)}
-					bind:value={secondValue}
-					disabled={busy}
-				/>
-				<button
-					class="visibility"
-					type="button"
-					onclick={() => (showSecond = !showSecond)}
-					aria-label={t(showSecond ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
-					title={t(showSecond ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
-					aria-pressed={showSecond}
-					disabled={busy}
-				>
-					{@render visibilityIcon(showSecond)}
-				</button>
-			</div>
-		</div>
-	</div>
 
-	{#if mode === 'change'}
-		<div class="field confirmation-field">
-			<label for="password-third">{t('settings.password.repeatNew')}</label>
-			<div class="password-input">
-				<input
-					id="password-third"
-					name="confirmNewPassword"
-					type={showThird ? 'text' : 'password'}
-					autocomplete="new-password"
-					placeholder={t('settings.password.repeatNew')}
-					bind:value={thirdValue}
-					disabled={busy}
-				/>
-				<button
-					class="visibility"
-					type="button"
-					onclick={() => (showThird = !showThird)}
-					aria-label={t(showThird ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
-					title={t(showThird ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
-					aria-pressed={showThird}
-					disabled={busy}
-				>
-					{@render visibilityIcon(showThird)}
-				</button>
+		{#if mode === 'change'}
+			<div class="field confirmation-field">
+				<label for="password-third">{t('settings.password.repeatNew')}</label>
+				<div class="password-input">
+					<input
+						id="password-third"
+						name="confirmNewPassword"
+						type={showThird ? 'text' : 'password'}
+						autocomplete="new-password"
+						placeholder={t('settings.password.repeatNew')}
+						bind:value={thirdValue}
+						disabled={busy}
+					/>
+					<button
+						class="visibility"
+						type="button"
+						onclick={() => (showThird = !showThird)}
+						aria-label={t(showThird ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
+						title={t(showThird ? 'auth.form.hidePassword' : 'auth.form.showPassword')}
+						aria-pressed={showThird}
+						disabled={busy}
+					>
+						{@render visibilityIcon(showThird)}
+					</button>
+				</div>
 			</div>
-		</div>
-	{/if}
+		{/if}
 
-	{#if displayedError}
-		<p class="error-message" role="alert">{displayedError}</p>
-	{/if}
-	<div class="actions">
-		<button type="button" class="cancel" onclick={onClose} disabled={busy}>{t('common.cancel')}</button>
-		<button type="submit" class="save" disabled={busy}
-			>{t(busy
-				? (mode === 'set' ? 'settings.password.setting' : 'settings.password.updating')
-				: (mode === 'set' ? 'settings.password.set' : 'common.saveChanges'))}</button
-		>
-	</div>
+		{#if displayedError}
+			<p class="error-message" role="alert">{displayedError}</p>
+		{/if}
+		<div class="actions">
+			<button type="button" class="cancel" onclick={onClose} disabled={busy}
+				>{t('common.cancel')}</button
+			>
+			<button type="submit" class="save" disabled={busy || !canConfirm}
+				>{t(
+					busy
+						? mode === 'set'
+							? 'settings.password.setting'
+							: 'settings.password.updating'
+						: mode === 'set'
+							? 'settings.password.set'
+							: 'common.saveChanges'
+				)}</button
+			>
+		</div>
 	</form>
 </dialog>
 
