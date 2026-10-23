@@ -61,7 +61,8 @@ export const translations = {
 		'auth.resend.rateLimit': 'Слишком много запросов. Подождите немного и попробуйте снова.',
 		'auth.verify.eyebrow': 'Подтверждение почты',
 		'auth.verify.title': 'Проверяем вашу почту',
-		'auth.verify.description': 'Подождите немного, пока мы проверим ссылку подтверждения вашего email.',
+		'auth.verify.description':
+			'Подождите немного, пока мы проверим ссылку подтверждения вашего email.',
 		'auth.verify.pending': 'Проверяем ссылку подтверждения...',
 		'auth.verify.backToLogin': 'Вернуться ко входу',
 		'auth.verify.successTitle': 'Почта подтверждена',
@@ -69,11 +70,13 @@ export const translations = {
 		'auth.verify.successDescription': 'Ваш email подтверждён. Теперь вы можете войти в StudyFlow.',
 		'auth.verify.errorDescription': 'Посмотрите причину ниже и попробуйте ещё раз.',
 		'auth.verify.invalid': 'Ссылка подтверждения недействительна или срок её действия истёк.',
-		'auth.verify.networkError': 'Не удалось подключиться к серверу. Проверьте подключение к интернету.',
+		'auth.verify.networkError':
+			'Не удалось подключиться к серверу. Проверьте подключение к интернету.',
 		'auth.verify.serverError': 'Произошла ошибка сервера. Попробуйте позже.',
 		'auth.verify.success': 'Email успешно подтверждён. Можно войти в аккаунт.',
 		'auth.verify.retry': 'Попробовать снова',
-		'auth.verify.emailHint': 'Введите email своего аккаунта, чтобы запросить новую ссылку подтверждения.',
+		'auth.verify.emailHint':
+			'Введите email своего аккаунта, чтобы запросить новую ссылку подтверждения.',
 		'auth.form.name': 'Имя',
 		'auth.form.namePlaceholder': 'Имя',
 		'auth.form.email': 'Email',
@@ -96,24 +99,36 @@ export const translations = {
 		'auth.google.login': 'Войти с Google',
 		'auth.google.register': 'Зарегистрироваться с Google',
 		'auth.google.or': 'или',
-		'auth.google.errors.denied': 'Вы отменили вход через Google. Чтобы продолжить, начните вход ещё раз.',
-		'auth.google.errors.expired': 'Эта попытка входа недействительна или устарела. Начните вход через Google заново.',
-		'auth.google.errors.emailConflict': 'Аккаунт с этой почтой уже существует. Войдите привычным способом. Подключить Google можно после входа в аккаунт.',
-		'auth.google.errors.accountConflict': 'Данные аккаунта изменились во время входа. Попробуйте войти ещё раз.',
-		'auth.google.errors.identity': 'Не удалось подтвердить ваш аккаунт Google. Попробуйте войти ещё раз.',
-		'auth.google.errors.emailNotVerified': 'Сначала подтвердите почту вашего аккаунта по ссылке в письме, затем повторите вход.',
-		'auth.google.errors.unavailable': 'Вход через Google сейчас недоступен. Попробуйте позже или войдите с помощью email и пароля.',
-		'auth.google.errors.general': 'Не удалось завершить вход. Попробуйте ещё раз или войдите с помощью email и пароля.',
+		'auth.google.errors.denied':
+			'Вы отменили вход через Google. Чтобы продолжить, начните вход ещё раз.',
+		'auth.google.errors.expired':
+			'Эта попытка входа недействительна или устарела. Начните вход через Google заново.',
+		'auth.google.errors.emailConflict':
+			'Аккаунт с этой почтой уже существует. Войдите привычным способом. Подключить Google можно после входа в аккаунт.',
+		'auth.google.errors.accountConflict':
+			'Данные аккаунта изменились во время входа. Попробуйте войти ещё раз.',
+		'auth.google.errors.identity':
+			'Не удалось подтвердить ваш аккаунт Google. Попробуйте войти ещё раз.',
+		'auth.google.errors.emailNotVerified':
+			'Сначала подтвердите почту вашего аккаунта по ссылке в письме, затем повторите вход.',
+		'auth.google.errors.unavailable':
+			'Вход через Google сейчас недоступен. Попробуйте позже или войдите с помощью email и пароля.',
+		'auth.google.errors.general':
+			'Не удалось завершить вход. Попробуйте ещё раз или войдите с помощью email и пароля.',
 		'auth.google.callback.title': 'Вход через Google',
 		'auth.google.callback.loadingTitle': 'Завершаем вход',
-		'auth.google.callback.loadingDescription': 'Подождите немного, скоро откроется ваше учебное пространство.',
+		'auth.google.callback.loadingDescription':
+			'Подождите немного, скоро откроется ваше учебное пространство.',
 		'auth.google.callback.pending': 'Проверяем авторизацию...',
 		'auth.google.callback.errorTitle': 'Не удалось войти',
-		'auth.google.callback.errorDescription': 'Вход через Google не завершён. Вернитесь на страницу входа и попробуйте ещё раз.',
-		'auth.google.callback.errorHint': 'Если ошибка повторяется, попробуйте войти с помощью email и пароля.',
+		'auth.google.callback.errorDescription':
+			'Вход через Google не завершён. Вернитесь на страницу входа и попробуйте ещё раз.',
+		'auth.google.callback.errorHint':
+			'Если ошибка повторяется, попробуйте войти с помощью email и пароля.',
 		'auth.login.passwordPlaceholder': 'Введите пароль',
 		'auth.login.verifyTitle': 'Подтвердите почту',
-		'auth.login.verifyDescription': 'Чтобы войти, перейдите по ссылке в письме. Если письмо не пришло, запросите его повторно.',
+		'auth.login.verifyDescription':
+			'Чтобы войти, перейдите по ссылке в письме. Если письмо не пришло, запросите его повторно.',
 		'auth.login.errors.credentials': 'Неверный email или пароль.',
 		'auth.login.errors.invalidData': 'Проверьте email и пароль.',
 		'auth.login.errors.general': 'Не удалось войти. Попробуйте позже.',
@@ -129,13 +144,58 @@ export const translations = {
 		'auth.register.hasAccount': 'Уже есть аккаунт?',
 		'auth.register.nameError': 'Имя должно содержать от 2 до 24 символов',
 		'auth.register.successTitle': 'Проверьте почту',
-		'auth.register.successDescription': 'Аккаунт создан. Для подтверждения email перейдите по ссылке в письме, отправленном на адрес:',
-		'auth.register.checkSpam': 'Не видите письмо? Проверьте папку «Спам» или запросите его повторно.',
+		'auth.register.successDescription':
+			'Аккаунт создан. Для подтверждения email перейдите по ссылке в письме, отправленном на адрес:',
+		'auth.register.checkSpam':
+			'Не видите письмо? Проверьте папку «Спам» или запросите его повторно.',
 		'auth.register.errors.emailTaken': 'Аккаунт с такой почтой уже существует. Попробуйте войти.',
 		'auth.register.errors.invalidData': 'Проверьте имя, email и пароль.',
 		'auth.register.errors.general': 'Не удалось создать аккаунт. Попробуйте позже.',
 
 		'profile.title': 'Профиль',
+		'account.errors.reauthRequired': 'Подтвердите доступ к текущей почте, чтобы продолжить.',
+		'account.errors.code':
+			'Код неверный, уже использован или просрочен. Проверьте последнее письмо.',
+		'account.errors.attempts': 'Слишком много попыток. Подождите перед повторным подтверждением.',
+		'account.errors.sendLimit': 'Слишком много запросов. Попробуйте позже.',
+		'account.errors.proof': 'Подтверждение недействительно или истекло. Запросите новый код.',
+		'account.errors.delivery': 'Не удалось отправить письмо. Попробуйте позже.',
+		'account.errors.emailTaken': 'Этот email уже используется другим аккаунтом.',
+		'account.errors.emailUnchanged': 'Новый email должен отличаться от текущего.',
+		'account.errors.emailToken':
+			'Ссылка недействительна или истекла. Войдите в тот же аккаунт, который запросил смену почты, либо запросите новое письмо.',
+		'account.errors.conflict': 'Данные аккаунта изменились. Повторите действие.',
+		'account.errors.googleInUse': 'Этот аккаунт Google уже связан с другим пользователем.',
+		'account.errors.googleLinked': 'Другой аккаунт Google уже подключён.',
+		'account.logoutWarning':
+			'Вы вышли на этом устройстве, но сервер не подтвердил отзыв сессии. Она может оставаться действительной до истечения срока.',
+		'account.confirmingEmail': 'Подтверждаем новый email...',
+		'account.emailConfirmed': 'Email успешно изменён.',
+		'account.switchAccount': 'Войти в другой аккаунт',
+		'account.deleteTitle': 'Вы действительно хотите удалить аккаунт?',
+		'account.signInToConfirm':
+			'Войдите в аккаунт, который запросил смену email. Подтверждение продолжится после входа. Не обновляйте эту страницу.',
+		'account.popupBlocked':
+			'Разрешите всплывающее окно для входа через Google, затем попробуйте снова.',
+		'account.emailSent':
+			'Мы отправили письмо на новый адрес. Подтвердите его в течение 30 минут. До подтверждения прежний email продолжает действовать.',
+		'account.passwordSet': 'Пароль установлен. Теперь можно входить с помощью email и пароля.',
+		'account.passwordChanged': 'Пароль успешно изменён.',
+		'account.googleDisconnected': 'Аккаунт Google отключён.',
+		'account.verifyMethod': 'Способ подтверждения личности',
+		'account.emailCode': 'Код на почту',
+		'account.emailCodeDescription':
+			'Введите новый адрес и подтвердите доступ к текущей почте кодом из письма.',
+		'account.codeInstruction':
+			'Подтвердите доступ к {email}. Код действует 10 минут и подходит только для этого действия.',
+		'account.codeSent': 'Код отправлен. Проверьте почту и папку «Спам».',
+		'account.codeLabel': 'Код из письма',
+		'account.resendIn': 'Повторить через {seconds} с',
+		'account.resend': 'Отправить код повторно',
+		'account.sendCode': 'Отправить код',
+		'account.unlinkTitle': 'Отключить Google?',
+		'account.unlinkDescription':
+			'Вход через Google станет недоступен. Вы сможете войти с помощью email и пароля.',
 		'profile.description': 'Личная информация, учебная статистика и управление аккаунтом.',
 		'profile.avatar.change': 'Изменить фото',
 		'profile.personal.title': 'Личная информация',
@@ -147,7 +207,8 @@ export const translations = {
 		'profile.errors.nameMax': 'Имя может содержать максимум 24 символа.',
 		'profile.errors.usernameMin': 'Юзернейм должен содержать минимум 3 символа.',
 		'profile.errors.usernameMax': 'Юзернейм может содержать максимум 24 символа.',
-		'profile.errors.usernameFormat': 'Используйте латинские буквы, цифры и символ подчёркивания (_).',
+		'profile.errors.usernameFormat':
+			'Используйте латинские буквы, цифры и символ подчёркивания (_).',
 		'profile.errors.usernameTaken': 'Этот юзернейм уже занят.',
 		'profile.errors.session': 'Ваша сессия истекла. Войдите в аккаунт снова.',
 		'profile.errors.invalidData': 'Проверьте введённые данные.',
@@ -170,6 +231,13 @@ export const translations = {
 		'profile.account.description': 'Видимость профиля, безопасность и доступ к аккаунту.',
 		'profile.account.public': 'Публичный аккаунт',
 		'profile.account.changeEmail': 'Изменить email',
+		'profile.emailChange.description':
+			'Введите новый email и подтвердите действие текущим паролем.',
+		'profile.emailChange.newEmail': 'Новый email',
+		'profile.emailChange.hint':
+			'На новый адрес придёт письмо с подтверждением. До подтверждения ваша текущая почта останется прежней.',
+		'profile.emailChange.confirm': 'Отправить письмо',
+		'profile.emailChange.sending': 'Отправляем...',
 		'profile.account.changePassword': 'Изменить пароль',
 		'profile.account.delete': 'Удалить аккаунт',
 		'profile.accountInfo.title': 'Информация об аккаунте',
@@ -312,7 +380,8 @@ export const translations = {
 		'settings.completed.tabOnly': 'Только во вкладке',
 		'settings.completed.activeList': 'Показывать в списке',
 		'settings.data.title': 'Данные',
-		'settings.data.description': 'Управляйте сохранёнными данными аккаунта. Удаление данных нельзя отменить.',
+		'settings.data.description':
+			'Управляйте сохранёнными данными аккаунта. Удаление данных нельзя отменить.',
 		'settings.data.exportPdf': 'Экспорт PDF',
 		'settings.data.importPdf': 'Импорт PDF',
 		'settings.data.clearTasks': 'Очистить задания',
@@ -327,7 +396,8 @@ export const translations = {
 		'settings.signIn.disconnecting': 'Отключаем...',
 		'settings.signIn.connecting': 'Подключаем...',
 		'settings.signIn.passwordHint': 'Чтобы отключить Google, сначала установите пароль.',
-		'settings.signIn.passwordRequired': 'Установите пароль и подтвердите почту, прежде чем отключать Google.',
+		'settings.signIn.passwordRequired':
+			'Установите пароль и подтвердите почту, прежде чем отключать Google.',
 		'settings.signIn.errors.connect': 'Не удалось подключить Google. Попробуйте ещё раз.',
 		'settings.signIn.errors.disconnect': 'Не удалось отключить Google. Попробуйте ещё раз.',
 		'settings.password.errors.required': 'Заполните все поля.',
@@ -344,7 +414,8 @@ export const translations = {
 		'settings.signIn.password': 'Пароль',
 		'settings.password.setTitle': 'Установить пароль',
 		'settings.password.changeTitle': 'Изменить пароль',
-		'settings.password.setDescription': 'Создайте пароль, чтобы входить в StudyFlow с помощью email.',
+		'settings.password.setDescription':
+			'Создайте пароль, чтобы входить в StudyFlow с помощью email.',
 		'settings.password.changeDescription': 'Введите текущий пароль и выберите новый.',
 		'settings.password.current': 'Текущий пароль',
 		'settings.password.new': 'Новый пароль',
@@ -457,8 +528,7 @@ export const translations = {
 		'auth.form.passwordPlaceholder': 'At least 8 characters',
 		'auth.login.eyebrow': 'Login',
 		'auth.login.title': 'Continue where you left off',
-		'auth.login.description':
-			'Sign in to return to your subjects, tasks, and study progress.',
+		'auth.login.description': 'Sign in to return to your subjects, tasks, and study progress.',
 		'auth.login.formTitle': 'Log in to your account',
 		'auth.login.formDescription': 'Use your email and password to open your study workspace.',
 		'auth.login.action': 'Log in',
@@ -467,24 +537,36 @@ export const translations = {
 		'auth.google.login': 'Sign in with Google',
 		'auth.google.register': 'Sign up with Google',
 		'auth.google.or': 'or',
-		'auth.google.errors.denied': 'You cancelled Google sign-in. Start signing in again to continue.',
-		'auth.google.errors.expired': 'This sign-in attempt is invalid or has expired. Start Google sign-in again.',
-		'auth.google.errors.emailConflict': 'An account with this email already exists. Sign in using your usual method. You can connect Google after signing in.',
-		'auth.google.errors.accountConflict': 'Your account details changed during sign-in. Please try signing in again.',
-		'auth.google.errors.identity': 'We could not verify your Google account. Please try signing in again.',
-		'auth.google.errors.emailNotVerified': 'First verify your account email using the link in your inbox, then try signing in again.',
-		'auth.google.errors.unavailable': 'Google sign-in is currently unavailable. Try again later or sign in with your email and password.',
-		'auth.google.errors.general': 'We could not complete sign-in. Try again or sign in with your email and password.',
+		'auth.google.errors.denied':
+			'You cancelled Google sign-in. Start signing in again to continue.',
+		'auth.google.errors.expired':
+			'This sign-in attempt is invalid or has expired. Start Google sign-in again.',
+		'auth.google.errors.emailConflict':
+			'An account with this email already exists. Sign in using your usual method. You can connect Google after signing in.',
+		'auth.google.errors.accountConflict':
+			'Your account details changed during sign-in. Please try signing in again.',
+		'auth.google.errors.identity':
+			'We could not verify your Google account. Please try signing in again.',
+		'auth.google.errors.emailNotVerified':
+			'First verify your account email using the link in your inbox, then try signing in again.',
+		'auth.google.errors.unavailable':
+			'Google sign-in is currently unavailable. Try again later or sign in with your email and password.',
+		'auth.google.errors.general':
+			'We could not complete sign-in. Try again or sign in with your email and password.',
 		'auth.google.callback.title': 'Sign in with Google',
 		'auth.google.callback.loadingTitle': 'Finishing sign-in',
-		'auth.google.callback.loadingDescription': 'Please wait a moment. Your study space will open shortly.',
+		'auth.google.callback.loadingDescription':
+			'Please wait a moment. Your study space will open shortly.',
 		'auth.google.callback.pending': 'Verifying sign-in...',
 		'auth.google.callback.errorTitle': 'Unable to sign in',
-		'auth.google.callback.errorDescription': 'Google sign-in could not be completed. Return to the sign-in page and try again.',
-		'auth.google.callback.errorHint': 'If this keeps happening, try signing in with your email and password.',
+		'auth.google.callback.errorDescription':
+			'Google sign-in could not be completed. Return to the sign-in page and try again.',
+		'auth.google.callback.errorHint':
+			'If this keeps happening, try signing in with your email and password.',
 		'auth.login.passwordPlaceholder': 'Enter your password',
 		'auth.login.verifyTitle': 'Verify your email',
-		'auth.login.verifyDescription': 'Follow the link in your verification email to log in. If it has not arrived, request another message.',
+		'auth.login.verifyDescription':
+			'Follow the link in your verification email to log in. If it has not arrived, request another message.',
 		'auth.login.errors.credentials': 'Incorrect email or password.',
 		'auth.login.errors.invalidData': 'Please check your email and password.',
 		'auth.login.errors.general': 'Could not log in. Please try again later.',
@@ -500,13 +582,55 @@ export const translations = {
 		'auth.register.hasAccount': 'Already have an account?',
 		'auth.register.nameError': 'Name must be between 2 and 24 characters',
 		'auth.register.successTitle': 'Check your inbox',
-		'auth.register.successDescription': 'Your account has been created. To verify your email, follow the link in the message sent to:',
+		'auth.register.successDescription':
+			'Your account has been created. To verify your email, follow the link in the message sent to:',
 		'auth.register.checkSpam': 'No email yet? Check your spam folder or request another message.',
 		'auth.register.errors.emailTaken': 'An account with this email already exists. Try logging in.',
 		'auth.register.errors.invalidData': 'Please check your name, email, and password.',
 		'auth.register.errors.general': 'Could not create your account. Please try again later.',
 
 		'profile.title': 'Profile',
+		'account.errors.reauthRequired': 'Verify access to your current email to continue.',
+		'account.errors.code': 'The code is incorrect, used or expired. Check the latest email.',
+		'account.errors.attempts': 'Too many attempts. Wait before trying verification again.',
+		'account.errors.sendLimit': 'Too many requests. Please try again later.',
+		'account.errors.proof': 'Verification is invalid or expired. Request a new code.',
+		'account.errors.delivery': 'Could not send the email. Please try again later.',
+		'account.errors.emailTaken': 'This email is already used by another account.',
+		'account.errors.emailUnchanged': 'The new email must differ from your current email.',
+		'account.errors.emailToken':
+			'The link is invalid or expired. Sign in to the account that requested the change, or request a new email.',
+		'account.errors.conflict': 'Account details changed. Please try again.',
+		'account.errors.googleInUse': 'This Google account is linked to another user.',
+		'account.errors.googleLinked': 'Another Google account is already connected.',
+		'account.logoutWarning':
+			'You signed out on this device, but server session revocation could not be confirmed. It may remain valid until it expires.',
+		'account.confirmingEmail': 'Confirming your new email...',
+		'account.emailConfirmed': 'Your email has been changed.',
+		'account.switchAccount': 'Sign in to another account',
+		'account.deleteTitle': 'Are you sure you want to delete your account?',
+		'account.signInToConfirm':
+			'Sign in to the account that requested the email change. Confirmation will continue after sign-in. Do not reload this page.',
+		'account.popupBlocked': 'Allow the Google sign-in popup, then try again.',
+		'account.emailSent':
+			'We sent a message to your new address. Confirm it within 30 minutes. Your current email remains active until confirmation.',
+		'account.passwordSet': 'Password set. You can now sign in with your email and password.',
+		'account.passwordChanged': 'Your password has been changed.',
+		'account.googleDisconnected': 'Google account disconnected.',
+		'account.verifyMethod': 'Identity verification method',
+		'account.emailCode': 'Email code',
+		'account.emailCodeDescription':
+			'Enter the new address and verify access to your current email using the emailed code.',
+		'account.codeInstruction':
+			'Verify access to {email}. The code is valid for 10 minutes and only for this action.',
+		'account.codeSent': 'Code sent. Check your inbox and spam folder.',
+		'account.codeLabel': 'Code from email',
+		'account.resendIn': 'Resend in {seconds}s',
+		'account.resend': 'Resend code',
+		'account.sendCode': 'Send code',
+		'account.unlinkTitle': 'Disconnect Google?',
+		'account.unlinkDescription':
+			'Google sign-in will be unavailable. You can still sign in with your email and password.',
 		'profile.description': 'Personal information, study statistics, and account controls.',
 		'profile.avatar.change': 'Change avatar',
 		'profile.personal.title': 'Personal information',
@@ -541,6 +665,13 @@ export const translations = {
 		'profile.account.description': 'Profile visibility, security, and account access.',
 		'profile.account.public': 'Public account',
 		'profile.account.changeEmail': 'Change email',
+		'profile.emailChange.description':
+			'Enter your new email and confirm with your current password.',
+		'profile.emailChange.newEmail': 'New email',
+		'profile.emailChange.hint':
+			'A confirmation email will be sent to the new address. Your current email will remain unchanged until you confirm.',
+		'profile.emailChange.confirm': 'Send email',
+		'profile.emailChange.sending': 'Sending...',
 		'profile.account.changePassword': 'Change password',
 		'profile.account.delete': 'Delete account',
 		'profile.accountInfo.title': 'Account information',
@@ -697,24 +828,28 @@ export const translations = {
 		'settings.signIn.disconnecting': 'Disconnecting...',
 		'settings.signIn.connecting': 'Connecting...',
 		'settings.signIn.passwordHint': 'Set a password before disconnecting Google.',
-		'settings.signIn.passwordRequired': 'Set a password and verify your email before disconnecting Google.',
+		'settings.signIn.passwordRequired':
+			'Set a password and verify your email before disconnecting Google.',
 		'settings.signIn.errors.connect': 'Could not connect Google. Please try again.',
 		'settings.signIn.errors.disconnect': 'Could not disconnect Google. Please try again.',
 		'settings.password.errors.required': 'Fill in all fields.',
 		'settings.password.errors.length': 'Password must contain between 8 and 72 characters.',
 		'settings.password.errors.match': 'Passwords must match.',
-		'settings.password.errors.different': 'The new password must differ from your current password.',
+		'settings.password.errors.different':
+			'The new password must differ from your current password.',
 		'settings.password.errors.confirmNew': 'The confirmation must match your new password.',
 		'settings.password.errors.exists': 'A password is already set. Use the change password option.',
 		'settings.password.errors.notSet': 'No password is set yet. Set one first.',
 		'settings.password.errors.incorrect': 'Your current password is incorrect.',
-		'settings.password.errors.concurrent': 'Your password changed during this request. Please try again.',
+		'settings.password.errors.concurrent':
+			'Your password changed during this request. Please try again.',
 		'settings.password.errors.save': 'Could not save your password. Please try again.',
 		'settings.signIn.description': 'Manage how you sign in to StudyFlow.',
 		'settings.signIn.password': 'Password',
 		'settings.password.setTitle': 'Set a password',
 		'settings.password.changeTitle': 'Change password',
-		'settings.password.setDescription': 'Create a password to sign in to StudyFlow with your email.',
+		'settings.password.setDescription':
+			'Create a password to sign in to StudyFlow with your email.',
 		'settings.password.changeDescription': 'Enter your current password and choose a new one.',
 		'settings.password.current': 'Current password',
 		'settings.password.new': 'New password',
@@ -808,10 +943,12 @@ export const translations = {
 		'auth.verify.backToLogin': 'Wróć do logowania',
 		'auth.verify.successTitle': 'Email potwierdzony',
 		'auth.verify.errorTitle': 'Nie udało się potwierdzić adresu email',
-		'auth.verify.successDescription': 'Twój email został potwierdzony. Możesz teraz zalogować się do StudyFlow.',
+		'auth.verify.successDescription':
+			'Twój email został potwierdzony. Możesz teraz zalogować się do StudyFlow.',
 		'auth.verify.errorDescription': 'Sprawdź szczegóły poniżej i spróbuj ponownie.',
 		'auth.verify.invalid': 'Link potwierdzający jest nieprawidłowy lub wygasł.',
-		'auth.verify.networkError': 'Nie udało się połączyć z serwerem. Sprawdź połączenie z internetem.',
+		'auth.verify.networkError':
+			'Nie udało się połączyć z serwerem. Sprawdź połączenie z internetem.',
 		'auth.verify.serverError': 'Wystąpił błąd serwera. Spróbuj ponownie później.',
 		'auth.verify.success': 'Email został potwierdzony. Możesz się zalogować.',
 		'auth.verify.retry': 'Spróbuj ponownie',
@@ -830,32 +967,43 @@ export const translations = {
 		'auth.login.description':
 			'Zaloguj się, aby wrócić do swoich przedmiotów, zadań i postępów w nauce.',
 		'auth.login.formTitle': 'Zaloguj się na konto',
-		'auth.login.formDescription':
-			'Użyj emaila i hasła, aby otworzyć swoją przestrzeń do nauki.',
+		'auth.login.formDescription': 'Użyj emaila i hasła, aby otworzyć swoją przestrzeń do nauki.',
 		'auth.login.action': 'Zaloguj się',
 		'auth.login.loading': 'Logowanie...',
 		'auth.login.noAccount': 'Nie masz konta?',
 		'auth.google.login': 'Zaloguj się przez Google',
 		'auth.google.register': 'Zarejestruj się przez Google',
 		'auth.google.or': 'lub',
-		'auth.google.errors.denied': 'Anulowano logowanie przez Google. Aby kontynuować, rozpocznij logowanie ponownie.',
-		'auth.google.errors.expired': 'Ta próba logowania jest nieprawidłowa lub wygasła. Rozpocznij logowanie przez Google ponownie.',
-		'auth.google.errors.emailConflict': 'Konto z tym adresem email już istnieje. Zaloguj się dotychczasową metodą. Google możesz połączyć po zalogowaniu.',
-		'auth.google.errors.accountConflict': 'Dane konta zmieniły się podczas logowania. Spróbuj zalogować się ponownie.',
-		'auth.google.errors.identity': 'Nie udało się zweryfikować konta Google. Spróbuj zalogować się ponownie.',
-		'auth.google.errors.emailNotVerified': 'Najpierw potwierdź adres email konta za pomocą linku w wiadomości, a następnie spróbuj zalogować się ponownie.',
-		'auth.google.errors.unavailable': 'Logowanie przez Google jest obecnie niedostępne. Spróbuj później lub zaloguj się za pomocą adresu email i hasła.',
-		'auth.google.errors.general': 'Nie udało się dokończyć logowania. Spróbuj ponownie lub zaloguj się za pomocą adresu email i hasła.',
+		'auth.google.errors.denied':
+			'Anulowano logowanie przez Google. Aby kontynuować, rozpocznij logowanie ponownie.',
+		'auth.google.errors.expired':
+			'Ta próba logowania jest nieprawidłowa lub wygasła. Rozpocznij logowanie przez Google ponownie.',
+		'auth.google.errors.emailConflict':
+			'Konto z tym adresem email już istnieje. Zaloguj się dotychczasową metodą. Google możesz połączyć po zalogowaniu.',
+		'auth.google.errors.accountConflict':
+			'Dane konta zmieniły się podczas logowania. Spróbuj zalogować się ponownie.',
+		'auth.google.errors.identity':
+			'Nie udało się zweryfikować konta Google. Spróbuj zalogować się ponownie.',
+		'auth.google.errors.emailNotVerified':
+			'Najpierw potwierdź adres email konta za pomocą linku w wiadomości, a następnie spróbuj zalogować się ponownie.',
+		'auth.google.errors.unavailable':
+			'Logowanie przez Google jest obecnie niedostępne. Spróbuj później lub zaloguj się za pomocą adresu email i hasła.',
+		'auth.google.errors.general':
+			'Nie udało się dokończyć logowania. Spróbuj ponownie lub zaloguj się za pomocą adresu email i hasła.',
 		'auth.google.callback.title': 'Logowanie przez Google',
 		'auth.google.callback.loadingTitle': 'Kończymy logowanie',
-		'auth.google.callback.loadingDescription': 'Poczekaj chwilę. Twoja przestrzeń do nauki wkrótce się otworzy.',
+		'auth.google.callback.loadingDescription':
+			'Poczekaj chwilę. Twoja przestrzeń do nauki wkrótce się otworzy.',
 		'auth.google.callback.pending': 'Weryfikujemy logowanie...',
 		'auth.google.callback.errorTitle': 'Nie udało się zalogować',
-		'auth.google.callback.errorDescription': 'Logowanie przez Google nie zostało ukończone. Wróć na stronę logowania i spróbuj ponownie.',
-		'auth.google.callback.errorHint': 'Jeśli błąd się powtarza, spróbuj zalogować się za pomocą adresu email i hasła.',
+		'auth.google.callback.errorDescription':
+			'Logowanie przez Google nie zostało ukończone. Wróć na stronę logowania i spróbuj ponownie.',
+		'auth.google.callback.errorHint':
+			'Jeśli błąd się powtarza, spróbuj zalogować się za pomocą adresu email i hasła.',
 		'auth.login.passwordPlaceholder': 'Wpisz hasło',
 		'auth.login.verifyTitle': 'Potwierdź adres email',
-		'auth.login.verifyDescription': 'Aby się zalogować, kliknij link w wiadomości potwierdzającej. Jeśli wiadomość nie dotarła, poproś o ponowną wysyłkę.',
+		'auth.login.verifyDescription':
+			'Aby się zalogować, kliknij link w wiadomości potwierdzającej. Jeśli wiadomość nie dotarła, poproś o ponowną wysyłkę.',
 		'auth.login.errors.credentials': 'Nieprawidłowy email lub hasło.',
 		'auth.login.errors.invalidData': 'Sprawdź email i hasło.',
 		'auth.login.errors.general': 'Nie udało się zalogować. Spróbuj ponownie później.',
@@ -871,13 +1019,59 @@ export const translations = {
 		'auth.register.hasAccount': 'Masz już konto?',
 		'auth.register.nameError': 'Imię musi mieć od 2 do 24 znaków',
 		'auth.register.successTitle': 'Sprawdź skrzynkę pocztową',
-		'auth.register.successDescription': 'Konto zostało utworzone. Aby potwierdzić email, kliknij link w wiadomości wysłanej na adres:',
-		'auth.register.checkSpam': 'Nie widzisz wiadomości? Sprawdź folder Spam lub poproś o ponowną wysyłkę.',
-		'auth.register.errors.emailTaken': 'Konto z tym adresem email już istnieje. Spróbuj się zalogować.',
+		'auth.register.successDescription':
+			'Konto zostało utworzone. Aby potwierdzić email, kliknij link w wiadomości wysłanej na adres:',
+		'auth.register.checkSpam':
+			'Nie widzisz wiadomości? Sprawdź folder Spam lub poproś o ponowną wysyłkę.',
+		'auth.register.errors.emailTaken':
+			'Konto z tym adresem email już istnieje. Spróbuj się zalogować.',
 		'auth.register.errors.invalidData': 'Sprawdź imię, email i hasło.',
 		'auth.register.errors.general': 'Nie udało się utworzyć konta. Spróbuj ponownie później.',
 
 		'profile.title': 'Profil',
+		'account.errors.reauthRequired': 'Potwierdź dostęp do aktualnej poczty, aby kontynuować.',
+		'account.errors.code':
+			'Kod jest nieprawidłowy, wykorzystany lub wygasł. Sprawdź ostatnią wiadomość.',
+		'account.errors.attempts': 'Zbyt wiele prób. Poczekaj przed ponowną weryfikacją.',
+		'account.errors.sendLimit': 'Zbyt wiele żądań. Spróbuj ponownie później.',
+		'account.errors.proof': 'Potwierdzenie jest nieprawidłowe lub wygasło. Poproś o nowy kod.',
+		'account.errors.delivery': 'Nie udało się wysłać wiadomości. Spróbuj później.',
+		'account.errors.emailTaken': 'Ten email jest już używany przez inne konto.',
+		'account.errors.emailUnchanged': 'Nowy email musi różnić się od aktualnego.',
+		'account.errors.emailToken':
+			'Link jest nieprawidłowy lub wygasł. Zaloguj się na konto, które zleciło zmianę, lub poproś o nową wiadomość.',
+		'account.errors.conflict': 'Dane konta zmieniły się. Spróbuj ponownie.',
+		'account.errors.googleInUse': 'To konto Google jest połączone z innym użytkownikiem.',
+		'account.errors.googleLinked': 'Inne konto Google jest już połączone.',
+		'account.logoutWarning':
+			'Wylogowano na tym urządzeniu, ale serwer nie potwierdził unieważnienia sesji. Może ona pozostać ważna do wygaśnięcia.',
+		'account.confirmingEmail': 'Potwierdzanie nowego adresu email...',
+		'account.emailConfirmed': 'Adres email został zmieniony.',
+		'account.switchAccount': 'Zaloguj się na inne konto',
+		'account.deleteTitle': 'Czy na pewno chcesz usunąć konto?',
+		'account.signInToConfirm':
+			'Zaloguj się na konto, które zleciło zmianę adresu email. Potwierdzenie będzie kontynuowane po zalogowaniu. Nie odświeżaj strony.',
+		'account.popupBlocked': 'Zezwól na wyskakujące okno logowania Google i spróbuj ponownie.',
+		'account.emailSent':
+			'Wysłaliśmy wiadomość na nowy adres. Potwierdź go w ciągu 30 minut. Dotychczasowy email pozostaje aktywny do potwierdzenia.',
+		'account.passwordSet':
+			'Hasło zostało ustawione. Możesz teraz logować się za pomocą adresu email i hasła.',
+		'account.passwordChanged': 'Hasło zostało zmienione.',
+		'account.googleDisconnected': 'Konto Google zostało odłączone.',
+		'account.verifyMethod': 'Metoda potwierdzenia tożsamości',
+		'account.emailCode': 'Kod email',
+		'account.emailCodeDescription':
+			'Wpisz nowy adres i potwierdź dostęp do aktualnej poczty kodem z wiadomości.',
+		'account.codeInstruction':
+			'Potwierdź dostęp do {email}. Kod jest ważny przez 10 minut i tylko dla tej operacji.',
+		'account.codeSent': 'Kod wysłany. Sprawdź skrzynkę odbiorczą i folder spam.',
+		'account.codeLabel': 'Kod z wiadomości',
+		'account.resendIn': 'Wyślij ponownie za {seconds} s',
+		'account.resend': 'Wyślij kod ponownie',
+		'account.sendCode': 'Wyślij kod',
+		'account.unlinkTitle': 'Odłączyć Google?',
+		'account.unlinkDescription':
+			'Logowanie przez Google nie będzie dostępne. Nadal możesz logować się za pomocą adresu email i hasła.',
 		'profile.description': 'Dane osobowe, statystyki nauki i zarządzanie kontem.',
 		'profile.avatar.change': 'Zmień avatar',
 		'profile.personal.title': 'Dane osobowe',
@@ -912,6 +1106,13 @@ export const translations = {
 		'profile.account.description': 'Widoczność profilu, bezpieczeństwo i dostęp do konta.',
 		'profile.account.public': 'Konto publiczne',
 		'profile.account.changeEmail': 'Zmień email',
+		'profile.emailChange.description':
+			'Wpisz nowy adres email i potwierdź zmianę aktualnym hasłem.',
+		'profile.emailChange.newEmail': 'Nowy email',
+		'profile.emailChange.hint':
+			'Na nowy adres wyślemy wiadomość z potwierdzeniem. Obecny adres email pozostanie bez zmian do momentu potwierdzenia.',
+		'profile.emailChange.confirm': 'Wyślij wiadomość',
+		'profile.emailChange.sending': 'Wysyłanie...',
 		'profile.account.changePassword': 'Zmień hasło',
 		'profile.account.delete': 'Usuń konto',
 		'profile.accountInfo.title': 'Informacje o koncie',
@@ -1052,7 +1253,8 @@ export const translations = {
 		'settings.completed.tabOnly': 'Tylko w karcie',
 		'settings.completed.activeList': 'Pokaż na liście',
 		'settings.data.title': 'Dane',
-		'settings.data.description': 'Zarządzaj zapisanymi danymi konta. Usunięcia danych nie można cofnąć.',
+		'settings.data.description':
+			'Zarządzaj zapisanymi danymi konta. Usunięcia danych nie można cofnąć.',
 		'settings.data.exportPdf': 'Eksport PDF',
 		'settings.data.importPdf': 'Import PDF',
 		'settings.data.clearTasks': 'Wyczyść zadania',
@@ -1067,7 +1269,8 @@ export const translations = {
 		'settings.signIn.disconnecting': 'Odłączanie...',
 		'settings.signIn.connecting': 'Łączenie...',
 		'settings.signIn.passwordHint': 'Przed odłączeniem Google ustaw hasło.',
-		'settings.signIn.passwordRequired': 'Przed odłączeniem Google ustaw hasło i potwierdź adres email.',
+		'settings.signIn.passwordRequired':
+			'Przed odłączeniem Google ustaw hasło i potwierdź adres email.',
 		'settings.signIn.errors.connect': 'Nie udało się połączyć Google. Spróbuj ponownie.',
 		'settings.signIn.errors.disconnect': 'Nie udało się odłączyć Google. Spróbuj ponownie.',
 		'settings.password.errors.required': 'Wypełnij wszystkie pola.',
@@ -1078,13 +1281,15 @@ export const translations = {
 		'settings.password.errors.exists': 'Hasło jest już ustawione. Skorzystaj z opcji zmiany hasła.',
 		'settings.password.errors.notSet': 'Hasło nie jest jeszcze ustawione. Najpierw je ustaw.',
 		'settings.password.errors.incorrect': 'Aktualne hasło jest nieprawidłowe.',
-		'settings.password.errors.concurrent': 'Hasło zmieniło się podczas tego żądania. Spróbuj ponownie.',
+		'settings.password.errors.concurrent':
+			'Hasło zmieniło się podczas tego żądania. Spróbuj ponownie.',
 		'settings.password.errors.save': 'Nie udało się zapisać hasła. Spróbuj ponownie.',
 		'settings.signIn.description': 'Zarządzaj metodami logowania do StudyFlow.',
 		'settings.signIn.password': 'Hasło',
 		'settings.password.setTitle': 'Ustaw hasło',
 		'settings.password.changeTitle': 'Zmień hasło',
-		'settings.password.setDescription': 'Utwórz hasło, aby logować się do StudyFlow za pomocą adresu email.',
+		'settings.password.setDescription':
+			'Utwórz hasło, aby logować się do StudyFlow za pomocą adresu email.',
 		'settings.password.changeDescription': 'Wpisz aktualne hasło i wybierz nowe.',
 		'settings.password.current': 'Aktualne hasło',
 		'settings.password.new': 'Nowe hasło',

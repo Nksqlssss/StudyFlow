@@ -11,11 +11,13 @@ type ApiOptions = {
 export class ApiError extends Error {
 	status: number;
 	code: string | null;
+	retryAfter?: number;
 
-	constructor(message: string, status: number, code: string | null) {
+	constructor(message: string, status: number, code: string | null, retryAfter?: number) {
 		super(message);
 		this.status = status;
 		this.code = code;
+		this.retryAfter = retryAfter;
 	}
 }
 
@@ -42,10 +44,12 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
 	const data = await response.json().catch(() => null);
 
 	if (!response.ok) {
+		const delay = Number(data?.retryAfter ?? response.headers.get('Retry-After'));
 		throw new ApiError(
 			data?.message ?? 'Request failed',
 			response.status,
-			typeof data?.code === 'string' ? data.code : null
+			typeof data?.code === 'string' ? data.code : null,
+			Number.isFinite(delay) && delay > 0 ? delay : undefined
 		);
 	}
 

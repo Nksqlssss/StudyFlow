@@ -62,7 +62,30 @@ export type AddGoogleAccountResponse = {
 
 export type setPasswordBody = {
 	password: string;
+	reauthToken?: string;
 };
+
+export type ReauthPurpose = 'set_password' | 'change_email';
+export type ReauthResponse = { reauthToken: string; expiresIn: number; purpose: ReauthPurpose };
+
+export function requestReauthCode(token: string, purpose: ReauthPurpose) {
+	return apiFetch<{ message: string; expiresIn: number; retryAfter: number }>(
+		'/auth/reauth/email/request',
+		{ method: 'POST', token, body: { purpose } }
+	);
+}
+
+export function verifyReauthCode(token: string, purpose: ReauthPurpose, code: string) {
+	return apiFetch<ReauthResponse>('/auth/reauth/email/verify', {
+		method: 'POST',
+		token,
+		body: { purpose, code }
+	});
+}
+
+export function logout(token: string) {
+	return apiFetch<void>('/auth/logout', { method: 'POST', token });
+}
 
 export type changePasswordBody = {
 	currentPassword: string;
@@ -116,6 +139,30 @@ export function deleteGoogleAccount(token: string) {
 	return apiFetch<void>('/auth/google/link', {
 		method: 'DELETE',
 		token
+	});
+}
+
+export function requestEmailChange(
+	token: string,
+	newEmail: string,
+	currentPassword: string,
+	reauthToken?: string
+) {
+	return apiFetch<{
+		message: string;
+		expiresIn: number;
+	}>('/users/me/email/change', {
+		method: 'POST',
+		token,
+		body: reauthToken ? { newEmail, reauthToken } : { newEmail, currentPassword }
+	});
+}
+
+export function confirmEmailChange(token: string, confirmationToken: string) {
+	return apiFetch<{ user: AuthUser }>('/users/me/email/confirm', {
+		method: 'POST',
+		token,
+		body: { token: confirmationToken }
 	});
 }
 
