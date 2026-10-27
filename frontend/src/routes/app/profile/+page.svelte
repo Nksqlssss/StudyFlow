@@ -2,6 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { ApiError } from '$lib/api/client';
 	import AccountSecurity from '$lib/components/auth/AccountSecurity.svelte';
+	import AvatarModal from '$lib/components/auth/AvatarModal.svelte';
+	import UserAvatar from '$lib/components/ui/UserAvatar.svelte';
+	import { avatar } from '$lib/stores/avatar';
 	import { resolve } from '$app/paths';
 	import { pendingEmailChange } from '$lib/stores/pendingEmailChange';
 	import { accountErrorKey } from '$lib/i18n/account-errors';
@@ -35,6 +38,7 @@
 	let isEditing = $state(false);
 	let isLoading = $state(false);
 	let showLogoutModalOpen = $state(false);
+	let showAvatarModal = $state(false);
 	let isDeleteAccountModalOpen = $state(false);
 	let accountError: string | null = $state(null);
 	let confirmationBusy = $state(false);
@@ -285,8 +289,13 @@
 
 	<section class="profile-section user-card">
 		<div class="avatar-wrap">
-			<div class="avatar" aria-hidden="true">NS</div>
-			<button type="button" class="avatar-action">{t('profile.avatar.change')}</button>
+			<UserAvatar size={92} />
+			<button
+				type="button"
+				class="avatar-action"
+				onclick={() => (showAvatarModal = true)}
+				disabled={$avatar.isAvatarLoading}>{t('profile.avatar.change')}</button
+			>
 		</div>
 
 		<div class="user-info">
@@ -467,6 +476,10 @@
 	/>
 {/if}
 
+{#if showAvatarModal}
+	<AvatarModal onClose={() => (showAvatarModal = false)} />
+{/if}
+
 {#if isDeleteAccountModalOpen}
 	<ConfirmModal
 		title={t('account.deleteTitle')}
@@ -554,20 +567,6 @@
 		display: grid;
 		justify-items: center;
 		gap: 10px;
-	}
-
-	.avatar {
-		display: grid;
-		place-items: center;
-		width: 92px;
-		height: 92px;
-		border: 1px solid var(--border-accent);
-		border-radius: 28px;
-		background: var(--gradient-primary-diagonal);
-		color: var(--text-on-accent);
-		font-size: 30px;
-		font-weight: 900;
-		box-shadow: 0 16px 40px var(--shadow-accent);
 	}
 
 	.avatar-action {

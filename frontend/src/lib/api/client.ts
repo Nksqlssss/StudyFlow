@@ -22,9 +22,10 @@ export class ApiError extends Error {
 }
 
 export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
+	const isFormData = options.body instanceof FormData;
 	const headers = new Headers();
 
-	if (options.body) {
+	if (options.body != null && !isFormData) {
 		headers.set('Content-Type', 'application/json');
 	}
 
@@ -37,7 +38,12 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
 	const response = await fetcher(`${PUBLIC_API_URL}${path}`, {
 		method: options.method ?? 'GET',
 		headers,
-		body: options.body ? JSON.stringify(options.body) : undefined,
+		body:
+			options.body == null
+				? undefined
+				: isFormData
+					? (options.body as FormData)
+					: JSON.stringify(options.body),
 		credentials: options.credentials
 	});
 

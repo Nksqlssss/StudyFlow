@@ -11,16 +11,16 @@ import {
 	getMe,
 	login as loginApi,
 	logout as logoutApi,
-	requestReauthCode as requestReauthCodeApi,
-	verifyReauthCode as verifyReauthCodeApi,
 	register as registerApi,
 	requestEmailChange as requestEmailChangeApi,
+	requestReauthCode as requestReauthCodeApi,
 	setPassword,
 	updateProfile as updateProfileApi,
+	verifyReauthCode as verifyReauthCodeApi,
 	type AuthUser,
 	type LoginBody,
-	type RegisterBody,
 	type ReauthPurpose,
+	type RegisterBody,
 	type UpdateProfileBody,
 	type changePasswordBody,
 	type setPasswordBody
@@ -149,6 +149,10 @@ function createAuthStore() {
 		return logoutPending;
 	}
 
+	function updateUser(user: AuthUser) {
+		update((state) => (state.token && state.user?.id === user.id ? { ...state, user } : state));
+	}
+
 	async function loadMethods() {
 		const token = browser ? localStorage.getItem(TOKEN_KEY) : null;
 		if (get({ subscribe }).isMethodsLoading) return;
@@ -195,6 +199,7 @@ function createAuthStore() {
 		subscribe,
 		logout,
 		loadMethods,
+		updateUser,
 		clearErrors() {
 			update((state) => ({
 				...state,
