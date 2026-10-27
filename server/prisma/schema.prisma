@@ -61,6 +61,7 @@ model User {
   name      String
   username  String?   @unique
   avatarUrl String?
+  avatarPublicId String?
   birthDate DateTime?
   isPublic  Boolean   @default(false)
   createdAt DateTime  @default(now())
