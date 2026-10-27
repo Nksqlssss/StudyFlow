@@ -110,7 +110,9 @@
 	}
 	.profile-footer {
 		flex: 1.4;
+		width: 100%;
 		min-width: 0;
+		align-self: stretch;
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -120,10 +122,15 @@
 		border-radius: 14px;
 		color: var(--text-primary);
 		text-decoration: none;
-		transition: background-color 0.3s;
+		transition:
+			background-color 180ms ease,
+			transform 120ms ease;
 	}
 	.profile-footer:hover {
-		background-color: var(--accent-primary-bg);
+		background-color: color-mix(in srgb, var(--accent-primary-bg), var(--surface-input-strong) 25%);
+	}
+	.profile-footer:active {
+		transform: scale(0.99);
 	}
 	.profile-footer:focus-visible {
 		outline: 2px solid var(--border-accent);
@@ -131,6 +138,7 @@
 	}
 	.profile-copy {
 		display: grid;
+		flex: 1;
 		gap: 3px;
 		min-width: 0;
 		font-size: 11px;
@@ -248,6 +256,15 @@
 		}
 		.profile-copy > span {
 			font-size: 12px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.profile-footer {
+			transition: none;
+		}
+		.profile-footer:active {
+			transform: none;
 		}
 	}
 </style>

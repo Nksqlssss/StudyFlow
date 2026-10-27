@@ -333,12 +333,6 @@
 		</div>
 
 		<div class="actions-grid">
-			<button type="button" class="secondary-action" onclick={modalToggle}
-				>{t('settings.data.exportPdf')}</button
-			>
-			<button type="button" class="secondary-action" onclick={modalToggle}
-				>{t('settings.data.importPdf')}</button
-			>
 			<button
 				type="button"
 				class="danger-action"
@@ -634,10 +628,6 @@
 
 	.actions-grid {
 		grid-template-columns: 1fr;
-	}
-
-	.secondary-action {
-		background-color: var(--surface-input-strong);
 	}
 
 	.danger-action {
