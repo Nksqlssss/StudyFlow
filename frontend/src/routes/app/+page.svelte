@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import SubjectCard from '$lib/components/ui/SubjectCard.svelte';
+	import UserAvatar from '$lib/components/ui/UserAvatar.svelte';
 	import { translate, type TranslationKey } from '$lib/i18n';
 	import { auth } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
@@ -32,7 +33,9 @@
 				<img src="/icons/lfIcon.svg" alt="" />
 			</div>
 		</div>
-		<div class="profile-icon">.</div>
+		<a href={resolve('/app/profile')} class="profile-icon" aria-label={t('nav.profile')}>
+			<UserAvatar size={36} />
+		</a>
 	</div>
 </header>
 
@@ -246,12 +249,14 @@
 		justify-content: space-between;
 		align-items: center;
 		padding: 16px 24px;
+		gap: 12px;
 		background-color: var(--bg-secondary);
 	}
 
 	.header-right-side {
 		display: flex;
 		align-items: center;
+		min-width: 0;
 		column-gap: 12px;
 	}
 
@@ -259,6 +264,8 @@
 		display: flex;
 		align-items: center;
 		width: min(52vw, 280px);
+		min-width: 0;
+		flex: 1;
 		height: 40px;
 		padding: 4px;
 		border: 1px solid var(--border-primary);
@@ -304,12 +311,18 @@
 	}
 
 	.profile-icon {
-		width: 28px;
-		height: 28px;
+		width: 44px;
+		height: 44px;
+		flex: 0 0 44px;
 		display: flex;
 		justify-content: center;
+		align-items: center;
 		background-color: var(--bg-primary);
 		border-radius: 50%;
+	}
+	.profile-icon:focus-visible {
+		outline: 2px solid var(--border-accent);
+		outline-offset: 2px;
 	}
 
 	.add-subject-button {
