@@ -17,7 +17,6 @@ export const translations = {
 		'common.somethingWentWrong': 'Что-то пошло не так',
 
 		'nav.subjects': 'Предметы',
-		'nav.schedule': 'Расписание',
 		'nav.student': 'Студент',
 		'avatar.title': 'Изменить аватарку',
 		'avatar.hint': 'Выберите базовую аватарку или загрузите JPEG, PNG либо WebP до 5 МиБ.',
@@ -476,7 +475,6 @@ export const translations = {
 		'common.somethingWentWrong': 'Something went wrong',
 
 		'nav.subjects': 'Subjects',
-		'nav.schedule': 'Schedule',
 		'nav.student': 'Student',
 		'avatar.title': 'Change avatar',
 		'avatar.hint': 'Choose a default avatar or upload a JPEG, PNG or WebP image up to 5 MiB.',
@@ -926,7 +924,6 @@ export const translations = {
 		'common.somethingWentWrong': 'Coś poszło nie tak',
 
 		'nav.subjects': 'Przedmioty',
-		'nav.schedule': 'Plan',
 		'nav.student': 'Student',
 		'avatar.title': 'Zmień awatar',
 		'avatar.hint': 'Wybierz domyślny awatar lub prześlij plik JPEG, PNG albo WebP do 5 MiB.',

@@ -3,6 +3,8 @@
 	import { page } from '$app/stores';
 	import { translate, type TranslationKey } from '$lib/i18n';
 	import { settings } from '$lib/stores/settings';
+	import { auth } from '$lib/stores/auth';
+	import UserAvatar from './UserAvatar.svelte';
 
 	const t = $derived((key: TranslationKey) => translate($settings.language, key));
 	const pathname = $derived($page.url.pathname);
@@ -29,26 +31,6 @@
 		</p>
 	</a>
 	<a
-		href={resolve('/app/schedule')}
-		class="schedule-button bottom-tabbar-button"
-		class:is-current={isRouteActive('/app/schedule')}
-	>
-		<img src="/icons/scheduleIcon.svg" alt="" class="tabbar-icon" />
-		<p class="schedule-button-name">
-			{t('nav.schedule')}
-		</p>
-	</a>
-	<a
-		href={resolve('/app/profile')}
-		class="profile-button bottom-tabbar-button"
-		class:is-current={isRouteActive('/app/profile')}
-	>
-		<img src="/icons/profileIcon.svg" alt="" class="tabbar-icon" />
-		<p class="profile-button-name">
-			{t('nav.profile')}
-		</p>
-	</a>
-	<a
 		href={resolve('/app/setting')}
 		class="settings-button bottom-tabbar-button"
 		class:is-current={isRouteActive('/app/setting')}
@@ -57,6 +39,19 @@
 		<p class="settings-button-name">
 			{t('nav.settings')}
 		</p>
+	</a>
+	<a
+		href={resolve('/app/profile')}
+		class="profile-footer"
+		class:is-current={isRouteActive('/app/profile')}
+		aria-current={isRouteActive('/app/profile') ? 'page' : undefined}
+		aria-label={t('nav.profile')}
+	>
+		<UserAvatar size={36} />
+		<span class="profile-copy">
+			<strong title={$auth.user?.name}>{$auth.user?.name ?? t('nav.profile')}</strong>
+			<span>{t('nav.student')}</span>
+		</span>
 	</a>
 </div>
 
@@ -113,6 +108,43 @@
 	.is-current {
 		background-color: var(--accent-primary-bg);
 	}
+	.profile-footer {
+		flex: 1.4;
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-height: 56px;
+		padding: 6px 8px;
+		border-left: 1px solid var(--border-primary);
+		border-radius: 14px;
+		color: var(--text-primary);
+		text-decoration: none;
+		transition: background-color 0.3s;
+	}
+	.profile-footer:hover {
+		background-color: var(--accent-primary-bg);
+	}
+	.profile-footer:focus-visible {
+		outline: 2px solid var(--border-accent);
+		outline-offset: 2px;
+	}
+	.profile-copy {
+		display: grid;
+		gap: 3px;
+		min-width: 0;
+		font-size: 11px;
+		line-height: 1.4;
+	}
+	.profile-copy strong {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.profile-copy > span {
+		color: var(--text-secondary);
+		font-size: 10px;
+	}
 
 	@media (min-width: 768px) {
 		.bottom-tabbar {
@@ -155,6 +187,18 @@
 			padding: 10px 8px;
 			border-radius: 18px;
 		}
+		.profile-footer {
+			flex: 0 0 auto;
+			margin-top: auto;
+			padding: 14px 4px 4px;
+			border-left: 0;
+			border-top: 1px solid var(--border-primary);
+			flex-direction: column;
+			text-align: center;
+		}
+		.profile-copy {
+			width: 100%;
+		}
 	}
 
 	@media (min-width: 1180px) {
@@ -191,6 +235,19 @@
 		.tabbar-icon {
 			width: 22px;
 			height: 22px;
+		}
+		.profile-footer {
+			flex-direction: row;
+			gap: 10px;
+			padding: 16px 8px 8px;
+			text-align: left;
+		}
+		.profile-copy {
+			width: auto;
+			font-size: 13px;
+		}
+		.profile-copy > span {
+			font-size: 12px;
 		}
 	}
 </style>
